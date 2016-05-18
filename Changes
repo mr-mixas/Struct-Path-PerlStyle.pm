@@ -1,0 +1,6 @@
+Revision history for Struct-Path-PerlStyle
+
+0.01    2016-05-19
+        ps_parse() implemented
+        working draft
+
