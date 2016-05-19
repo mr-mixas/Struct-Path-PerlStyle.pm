@@ -15,11 +15,11 @@ Struct::Path::PerlStyle - Perl-style Path syntax frontend for Struct::Path.
 
 =head1 VERSION
 
-Version 0.01
+Version 0.02
 
 =cut
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 =head1 SYNOPSIS
 
@@ -62,8 +62,17 @@ sub ps_parse($) {
             ($c->isa('PPI::Structure::Constructor') and $c->first_token->content eq '{')) {
             push @{$out}, {};
             for my $t (@tokens) {
-                next if ($t->isa('PPI::Token::Operator') and $t->content eq ',');
-                $out->[-1]->{$t->content} = keys %{$out->[-1]};
+                my $key;
+                if ($t->isa('PPI::Token::Word')) {
+                    $key = $t->content;
+                } elsif ($t->isa('PPI::Token::Operator') and $t->content eq ',') {
+                    next;
+                } elsif ($t->isa('PPI::Token::Quote')) {
+                    $key = substr(substr($t->content, 1), 0, -1);
+                } else {
+                    croak "Unsupported thing '" . $t->content . "' in hash key specification";
+                }
+                $out->[-1]->{$key} = keys %{$out->[-1]};
             }
         } elsif ($c->isa('PPI::Structure::Constructor') and $c->first_token->content eq '[') {
             push @{$out}, [];
@@ -81,7 +90,7 @@ sub ps_parse($) {
                 } elsif ($t->isa('PPI::Token::Operator') and $t->content eq '..') {
                     $is_range = $t;
                 } else {
-                    croak "Unsupported thing '" . $t->content . "' in array's item specification";
+                    croak "Unsupported thing '" . $t->content . "' in array item specification";
                 }
             }
         } else {

@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 use Data::Dumper;
-use Test::More tests => 8;
+use Test::More tests => 10;
 
 use Struct::Path::PerlStyle qw(ps_parse);
 
@@ -46,6 +46,18 @@ ok(pcmp(
 ok(pcmp(
     '{a b}{e d}',
     [{a => 0,b => 1},{e => 0,d => 1}]
+));
+
+# Quotes
+ok(pcmp(
+    "{'a', 'b'}{' c d'}",
+    [{a => 0,b => 1},{' c d' => 0}]
+));
+
+# Double quotes
+ok(pcmp(
+    '{"a", "b"}{" c d"}',
+    [{a => 0,b => 1},{' c d' => 0}]
 ));
 
 ### ARRAYS ###
