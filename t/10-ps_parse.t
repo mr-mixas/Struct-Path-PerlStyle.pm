@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 use Data::Dumper;
-use Test::More tests => 10;
+use Test::More tests => 12;
 
 use Struct::Path::PerlStyle qw(ps_parse);
 
@@ -16,11 +16,20 @@ sub pcmp($$) {
 }
 
 # TODO:
-# quotes: single and double
 # range with one boundary
 # garbage like '{a][0}' and so on
 # float point array indexes
 # space and other garbage between path elements
+
+# udndef path
+eval { pcmp(undef, []) };
+ok($@);
+
+# empty path
+ok(pcmp(
+    '',
+    []
+));
 
 ### HASHES ###
 
