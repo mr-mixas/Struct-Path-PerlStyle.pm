@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 use Data::Dumper;
-use Test::More tests => 12;
+use Test::More tests => 13;
 
 use Struct::Path::PerlStyle qw(ps_parse);
 
@@ -23,6 +23,10 @@ sub pcmp($$) {
 
 # udndef path
 eval { pcmp(undef, []) };
+ok($@);
+
+# non-scalar path
+eval { pcmp({}, []) };
 ok($@);
 
 # empty path

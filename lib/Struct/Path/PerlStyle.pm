@@ -54,6 +54,7 @@ sub ps_parse($) {
     my $path = shift;
     croak "Undefined path passed" unless (defined $path);
     my $doc = PPI::Lexer->lex_source($path);
+    croak "Failed to parse passed path '$path'" unless (defined $doc);
     my $out = [];
 
     for my $c (map { $_->elements } $doc->children) {
