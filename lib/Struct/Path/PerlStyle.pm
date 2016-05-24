@@ -51,8 +51,10 @@ Path syntax examples:
 =cut
 
 sub ps_parse($) {
-    my $doc = PPI::Lexer->lex_source(shift);
-    my $out;
+    my $path = shift;
+    croak "Undefined path passed" unless (defined $path);
+    my $doc = PPI::Lexer->lex_source($path);
+    my $out = [];
 
     for my $c (map { $_->elements } $doc->children) {
         $c->prune('PPI::Token::Whitespace');
