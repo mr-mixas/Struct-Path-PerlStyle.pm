@@ -19,8 +19,11 @@ WriteMakefile(
         'Test::More'   => 0,
     },
     PREREQ_PM => {
-        'parent'       => 0,
+        'Carp'         => 0,
         'PPI'          => 0,
+        'parent'       => 0,
+        'strict'       => 0,
+        'warnings'     => 0
     },
     dist  => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
     clean => { FILES => 'Struct-Path-PerlStyle-*' },
