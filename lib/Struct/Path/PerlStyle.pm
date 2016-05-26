@@ -25,8 +25,8 @@ our $VERSION = '0.02';
 
     use Struct::Path::PerlStyle qw(ps_parse ps_serialize);
 
-    $struct = ps_parse('{a}{b}[1]'); # Struct::Path compatible
-    $string = ps_serialize($struct);
+    $struct = ps_parse('{a}{b}[1]');    # Struct::Path compatible
+    $string = ps_serialize($struct);    # convert Struct::Path path to string
 
 =head1 EXPORT
 
@@ -57,12 +57,12 @@ sub ps_parse($) {
     croak "Failed to parse passed path '$path'" unless (defined $doc);
     my $out = [];
 
-    for my $c (map { $_->elements } $doc->children) {
-        $c->prune('PPI::Token::Whitespace');
-        my @tokens = map { $_->elements } $c->children;
+    for my $child (map { $_->elements } $doc->children) {
+        $child->prune('PPI::Token::Whitespace');
+        my @tokens = map { $_->elements } $child->children;
 
-        if ($c->isa('PPI::Structure::Block') or
-            ($c->isa('PPI::Structure::Constructor') and $c->first_token->content eq '{')) {
+        if ($child->isa('PPI::Structure::Block') or
+            ($child->isa('PPI::Structure::Constructor') and $child->first_token->content eq '{')) {
             push @{$out}, {};
             for my $t (@tokens) {
                 my $key;
@@ -77,7 +77,7 @@ sub ps_parse($) {
                 }
                 $out->[-1]->{$key} = keys %{$out->[-1]};
             }
-        } elsif ($c->isa('PPI::Structure::Constructor') and $c->first_token->content eq '[') {
+        } elsif ($child->isa('PPI::Structure::Constructor') and $child->first_token->content eq '[') {
             push @{$out}, [];
             my $is_range;
             for my $t (@tokens) {
