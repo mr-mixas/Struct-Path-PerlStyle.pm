@@ -11,7 +11,7 @@ sub pcmp($$) {
     my $str = shift;
     my $got = Data::Dumper->new([ps_parse($str)])->Terse(1)->Sortkeys(1)->Quotekeys(0)->Indent(0)->Dump();
     my $exp = Data::Dumper->new([shift])->Terse(1)->Sortkeys(1)->Quotekeys(0)->Indent(0)->Dump();
-    print STDERR "\nDEBUG for '$str':\ngot: $got\nexp: $exp\n";
+    print STDERR "\nDEBUG for '$str':\ngot: $got\nexp: $exp\n" if ($ENV{DEBUG});;
     return $got eq $exp;
 }
 
