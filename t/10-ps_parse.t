@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 use Data::Dumper;
-use Test::More tests => 13;
+use Test::More tests => 14;
 
 use Struct::Path::PerlStyle qw(ps_parse);
 
@@ -18,7 +18,6 @@ sub pcmp($$) {
 # TODO:
 # range with one boundary
 # garbage like '{a][0}' and so on
-# float point array indexes
 # space and other garbage between path elements
 
 # udndef path
@@ -97,5 +96,11 @@ ok(pcmp(
 ok(pcmp(
     '[][][]',
     [[],[],[]]
+));
+
+# float point indexes
+ok(pcmp(
+    '[0.3][][3.12]',
+    [[0.3],[],[3.12]]
 ));
 
