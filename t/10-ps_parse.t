@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 use Data::Dumper;
-use Test::More tests => 14;
+use Test::More tests => 16;
 
 use Struct::Path::PerlStyle qw(ps_parse);
 
@@ -18,7 +18,6 @@ sub pcmp($$) {
 # TODO:
 # range with one boundary
 # garbage like '{a][0}' and so on
-# space and other garbage between path elements
 
 # udndef path
 eval { pcmp(undef, []) };
@@ -33,6 +32,15 @@ ok(pcmp(
     '',
     []
 ));
+
+# garbage between path elements
+eval { pcmp('{a},{b}', []) };
+ok($@ =~ m/^Unsupported thing ',' in the path at/);
+
+# space between path elements
+eval { pcmp('{a} []', []) };
+ok($@ =~ m/Unsupported thing ' ' in the path at/);
+
 
 ### HASHES ###
 

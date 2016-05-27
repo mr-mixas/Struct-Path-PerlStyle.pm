@@ -57,47 +57,50 @@ sub ps_parse($) {
     croak "Failed to parse passed path '$path'" unless (defined $doc);
     my $out = [];
 
-    for my $child (map { $_->elements } $doc->children) {
-        $child->prune('PPI::Token::Whitespace');
-        my @tokens = map { $_->elements } $child->children;
+    for my $step ($doc->elements) {
+        croak "Unsupported thing '" . $step->content . "' in the path" unless ($step->can('elements'));
+        for my $item ($step->elements) {
+            $item->prune('PPI::Token::Whitespace') if $item->can('prune');
 
-        if ($child->isa('PPI::Structure::Block') or
-            ($child->isa('PPI::Structure::Constructor') and $child->first_token->content eq '{')) {
-            push @{$out}, {};
-            for my $t (@tokens) {
-                my $key;
-                if ($t->isa('PPI::Token::Word')) {
-                    $key = $t->content;
-                } elsif ($t->isa('PPI::Token::Operator') and $t->content eq ',') {
-                    next;
-                } elsif ($t->isa('PPI::Token::Quote')) {
-                    $key = substr(substr($t->content, 1), 0, -1);
-                } else {
-                    croak "Unsupported thing '" . $t->content . "' in hash key specification";
-                }
-                $out->[-1]->{$key} = keys %{$out->[-1]};
-            }
-        } elsif ($child->isa('PPI::Structure::Constructor') and $child->first_token->content eq '[') {
-            push @{$out}, [];
-            my $is_range;
-            for my $t (@tokens) {
-                if ($t->isa('PPI::Token::Number')) {
-                    if ($is_range) {
-                        my $start = pop(@{$out->[-1]});
-                        push @{$out->[-1]}, ($start < $t->content ? $start..$t->content : reverse $t->content..$start);
+            if ($item->isa('PPI::Structure::Block') or
+                ($item->isa('PPI::Structure::Constructor') and $item->first_token->content eq '{')) {
+                push @{$out}, {};
+                for my $t (map { $_->elements } $item->children) {
+                    my $key;
+                    if ($t->isa('PPI::Token::Word')) {
+                        $key = $t->content;
+                    } elsif ($t->isa('PPI::Token::Operator') and $t->content eq ',') {
+                        next;
+                    } elsif ($t->isa('PPI::Token::Quote')) {
+                        $key = substr(substr($t->content, 1), 0, -1);
                     } else {
-                        push @{$out->[-1]}, $t->content + 0;
+                        croak "Unsupported thing '" . $t->content . "' in hash key specification";
                     }
-                } elsif ($t->isa('PPI::Token::Operator') and $t->content eq ',') {
-                    $is_range = undef;
-                } elsif ($t->isa('PPI::Token::Operator') and $t->content eq '..') {
-                    $is_range = $t;
-                } else {
-                    croak "Unsupported thing '" . $t->content . "' in array item specification";
+                    $out->[-1]->{$key} = keys %{$out->[-1]};
                 }
+            } elsif ($item->isa('PPI::Structure::Constructor') and $item->first_token->content eq '[') {
+                push @{$out}, [];
+                my $is_range;
+                for my $t (map { $_->elements } $item->children) {
+                    if ($t->isa('PPI::Token::Number')) {
+                        if ($is_range) {
+                            my $start = pop(@{$out->[-1]});
+                            push @{$out->[-1]},
+                                ($start < $t->content ? $start..$t->content : reverse $t->content..$start);
+                        } else {
+                            push @{$out->[-1]}, $t->content + 0;
+                        }
+                    } elsif ($t->isa('PPI::Token::Operator') and $t->content eq ',') {
+                        $is_range = undef;
+                    } elsif ($t->isa('PPI::Token::Operator') and $t->content eq '..') {
+                        $is_range = $t;
+                    } else {
+                        croak "Unsupported thing '" . $t->content . "' in array item specification";
+                    }
+                }
+            } else {
+                croak "Unsupported thing '" . $item->content . "' in the path" ;
             }
-        } else {
-            croak "Unsupported thing in the path";
         }
     }
 
