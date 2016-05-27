@@ -5,13 +5,13 @@ use strict;
 use warnings FATAL => 'all';
 use parent qw(Exporter);
 use Carp qw(croak);
-use PPI::Lexer;
+use PPI::Lexer qw();
 
-BEGIN { our @EXPORT_OK = qw(ps_parse ps_serialize) }
+our @EXPORT_OK = qw(ps_parse ps_serialize);
 
 =head1 NAME
 
-Struct::Path::PerlStyle - Perl-style Path syntax frontend for Struct::Path.
+Struct::Path::PerlStyle - Perl-style syntax frontend for Struct::Path.
 
 =head1 VERSION
 
@@ -36,7 +36,7 @@ Nothing exports by default.
 
 =head2 ps_parse
 
-Parse perl-style struct path string to Struct::Path format
+Parse perl-style string to Struct::Path path
 
 Path syntax examples:
 
@@ -106,7 +106,7 @@ sub ps_parse($) {
 
 =head2 ps_serialize
 
-Serialize Struct::Path format to perl-style string
+Serialize Struct::Path path to perl-style string
 
 =cut
 
