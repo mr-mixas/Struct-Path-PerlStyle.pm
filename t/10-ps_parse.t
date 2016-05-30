@@ -15,9 +15,6 @@ sub pcmp($$) {
     return $got eq $exp;
 }
 
-# TODO:
-# float point numbers as arrays indexes
-
 # udndef path
 eval { pcmp(undef, []) };
 ok($@);
