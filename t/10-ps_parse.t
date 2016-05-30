@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 use Data::Dumper;
-use Test::More tests => 16;
+use Test::More tests => 22;
 
 use Struct::Path::PerlStyle qw(ps_parse);
 
@@ -16,8 +16,7 @@ sub pcmp($$) {
 }
 
 # TODO:
-# range with one boundary
-# garbage like '{a][0}' and so on
+# float point numbers as arrays indexes
 
 # udndef path
 eval { pcmp(undef, []) };
@@ -35,12 +34,35 @@ ok(pcmp(
 
 # garbage between path elements
 eval { pcmp('{a},{b}', []) };
-ok($@ =~ m/^Unsupported thing ',' in the path at/);
+ok($@ =~ m/^Unsupported thing ',' in the path/);
 
 # space between path elements
 eval { pcmp('{a} []', []) };
-ok($@ =~ m/Unsupported thing ' ' in the path at/);
+ok($@ =~ m/^Unsupported thing ' ' in the path/);
 
+# unmatched brackets
+eval { pcmp('{a][0}', []) };
+ok($@ =~ m/^Unsupported thing ']' in the path/);
+
+# unmatched brackets2
+eval { pcmp('[0}', []) };
+ok($@ =~ m/^Unsupported thing '}' in the path/);
+
+# parenthesis in the path
+eval { pcmp('(0)', []) };
+ok($@ =~ m/^Unsupported thing '\(0\)' in the path/);
+
+# garbage: nested steps
+eval { pcmp('[[0]]', []) };
+ok($@ =~ m/^Unsupported thing '\[0\]' in array item specification/);
+
+# range with one boundary
+eval { pcmp('[..3]', []) };
+ok($@ =~ m/^Undefined start for range/);
+
+# range with one boundary2
+eval { pcmp('[4..]', []) };
+ok($@ =~ m/^Unfinished range secified/);
 
 ### HASHES ###
 
