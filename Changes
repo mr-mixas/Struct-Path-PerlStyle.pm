@@ -1,5 +1,8 @@
 Revision history for Struct-Path-PerlStyle
 
+0.03    2016-06-30
+        unstarted/unfinished ranges correctly handled in ps_parse()
+
 0.02    2016-06-27
         multiple bugfixes, cosmetic changes
 
