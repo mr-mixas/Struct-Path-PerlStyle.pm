@@ -15,11 +15,11 @@ Struct::Path::PerlStyle - Perl-style syntax frontend for Struct::Path.
 
 =head1 VERSION
 
-Version 0.02
+Version 0.03
 
 =cut
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 =head1 SYNOPSIS
 
@@ -85,8 +85,10 @@ sub ps_parse($) {
                     if ($t->isa('PPI::Token::Number')) {
                         if ($is_range) {
                             my $start = pop(@{$out->[-1]});
+                            croak "Undefined start for range" unless (defined $start);
                             push @{$out->[-1]},
                                 ($start < $t->content ? $start..$t->content : reverse $t->content..$start);
+                            $is_range = undef;
                         } else {
                             push @{$out->[-1]}, $t->content + 0;
                         }
@@ -98,6 +100,7 @@ sub ps_parse($) {
                         croak "Unsupported thing '" . $t->content . "' in array item specification";
                     }
                 }
+                croak "Unfinished range secified" if ($is_range);
             } else {
                 croak "Unsupported thing '" . $item->content . "' in the path" ;
             }
