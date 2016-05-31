@@ -1,6 +1,6 @@
 # NAME
 
-Struct::Path::PerlStyle - Perl-style syntax frontend for Struct::Path.
+Struct::Path::PerlStyle - Perl-style syntax frontend for [Struct::Path](https://metacpan.org/pod/Struct::Path).
 
 # VERSION
 
@@ -10,7 +10,7 @@ Version 0.04
 
     use Struct::Path::PerlStyle qw(ps_parse ps_serialize);
 
-    $struct = ps_parse('{a}{b}[1]');    # Struct::Path compatible
+    $struct = ps_parse('{a}{b}[1]');    # L<Struct::Path|Struct::Path> compatible
     $string = ps_serialize($struct);    # convert Struct::Path path to string
 
 # EXPORT
@@ -21,7 +21,7 @@ Nothing exports by default.
 
 ## ps\_parse
 
-Parse perl-style string to Struct::Path path
+Parse perl-style string to [Struct::Path](https://metacpan.org/pod/Struct::Path) path
 
     $struct_path = ps_parse($string);
 
@@ -37,7 +37,7 @@ Path syntax examples:
 
 ## ps\_serialize
 
-Serialize Struct::Path path to perl-style string
+Serialize [Struct::Path](https://metacpan.org/pod/Struct::Path) path to perl-style string
 
     $string = ps_serialize($struct_path);
 
