@@ -15,11 +15,11 @@ Struct::Path::PerlStyle - Perl-style syntax frontend for Struct::Path.
 
 =head1 VERSION
 
-Version 0.03
+Version 0.04
 
 =cut
 
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 
 =head1 SYNOPSIS
 
@@ -117,7 +117,25 @@ Serialize Struct::Path path to perl-style string
 =cut
 
 sub ps_serialize($) {
-    croak "Not implemented yet";
+    my $path = shift;
+    croak "Path must be arrayref" unless (ref $path eq 'ARRAY');
+
+    my $out = '';
+    my $sc = 0; # step counter
+
+    for my $step (@{$path}) {
+        if (ref $step eq 'ARRAY') {
+            $out .= "[";
+            $out .= join(",", @{$step}); # TODO: ranges (convert sequences to ranges)
+            $out .= "]";
+        } elsif (ref $step eq 'HASH') {
+            $out .= "{" . join(",", sort { $step->{$a} <=> $step->{$b} } keys %{$step}) . "}";
+        } else {
+            croak "Unsupported thing in the path (step #$sc)";
+        }
+    }
+
+    return $out;
 }
 
 =head1 AUTHOR
