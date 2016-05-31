@@ -38,6 +38,8 @@ Nothing exports by default.
 
 Parse perl-style string to Struct::Path path
 
+    $struct_path = ps_parse($string);
+
 Path syntax examples:
 
     "{a}{b}"              # means b's value
@@ -113,6 +115,8 @@ sub ps_parse($) {
 =head2 ps_serialize
 
 Serialize Struct::Path path to perl-style string
+
+    $string = ps_serialize($struct_path);
 
 =cut
 
