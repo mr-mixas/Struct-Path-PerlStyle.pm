@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 8;
+use Test::More tests => 10;
 
 use Struct::Path::PerlStyle qw(ps_serialize);
 
@@ -31,7 +31,6 @@ $str = ps_serialize([{a => 1,b => 0},{c => 0,d => 1}]);
 ok($str eq '{b,a}{c,d}');
 
 ### ARRAYS ###
-
 # simple array path
 $str = ps_serialize([[2],[],[0]]);
 ok($str eq '[2][][0]');
@@ -40,7 +39,15 @@ ok($str eq '[2][][0]');
 $str = ps_serialize([[2],[5],[0]]);
 ok($str eq '[2][5][0]');
 
-# Array path with slices and whitespace garbage
+# Array path with slices
 $str = ps_serialize([[0,2],[7,5,2]]);
 ok($str eq '[0,2][7,5,2]');
+
+# Ascending ranges
+$str = ps_serialize([[0,1,2],[6,7,8,10]]);
+ok($str eq '[0..2][6..8,10]');
+
+# Descending ranges
+$str = ps_serialize([[2,1,0],[10,8,7,6]]);
+ok($str eq '[2..0][10,8..6]');
 

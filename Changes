@@ -1,12 +1,15 @@
 Revision history for Struct-Path-PerlStyle
 
-0.04    2016-06-31
+0.05    2016-06-03
+        ranges supported in ps_serialize()
+
+0.04    2016-05-31
         ps_serialize() implemented
 
-0.03    2016-06-30
+0.03    2016-05-30
         unstarted/unfinished ranges correctly handled in ps_parse()
 
-0.02    2016-06-27
+0.02    2016-05-27
         multiple bugfixes, cosmetic changes
 
 0.01    2016-05-19
