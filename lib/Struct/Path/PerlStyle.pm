@@ -15,11 +15,11 @@ Struct::Path::PerlStyle - Perl-style syntax frontend for L<Struct::Path|Struct::
 
 =head1 VERSION
 
-Version 0.04
+Version 0.05
 
 =cut
 
-our $VERSION = '0.04';
+our $VERSION = '0.05';
 
 =head1 SYNOPSIS
 
@@ -129,9 +129,18 @@ sub ps_serialize($) {
 
     for my $step (@{$path}) {
         if (ref $step eq 'ARRAY') {
-            $out .= "[";
-            $out .= join(",", @{$step}); # TODO: ranges (convert sequences to ranges)
-            $out .= "]";
+            my @ranges;
+            for my $i (@{$step}) {
+                if (@ranges and (
+                    ($ranges[-1][1] + 1 == $i and $ranges[-1][0] <= $ranges[-1][1]) or   # ascending range
+                    ($ranges[-1][1] - 1 == $i and $ranges[-1][0] >= $ranges[-1][1])      # descending range
+                )) {
+                    $ranges[-1][1] = $i; # update range
+                } else {
+                    push @ranges, [$i, $i];
+                }
+            }
+            $out .= "[" . join(",", map { $_->[0] != $_->[1] ? "$_->[0]..$_->[1]" : $_->[0] } @{ranges}) . "]";
         } elsif (ref $step eq 'HASH') {
             $out .= "{" . join(",", sort { $step->{$a} <=> $step->{$b} } keys %{$step}) . "}";
         } else {
