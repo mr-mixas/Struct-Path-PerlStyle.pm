@@ -10,7 +10,7 @@ my $str;
 
 # undef path
 eval { $str = ps_serialize(undef) };
-ok($@ =~ '^Path must be arrayref');
+ok($@ =~ '^Path must be an arrayref');
 
 # empty path
 $str = ps_serialize([]);

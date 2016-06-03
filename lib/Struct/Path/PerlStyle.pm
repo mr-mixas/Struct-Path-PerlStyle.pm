@@ -58,9 +58,10 @@ sub ps_parse($) {
     my $doc = PPI::Lexer->lex_source($path);
     croak "Failed to parse passed path '$path'" unless (defined $doc);
     my $out = [];
+    my $sc = 0; # step counter
 
     for my $step ($doc->elements) {
-        croak "Unsupported thing '" . $step->content . "' in the path" unless ($step->can('elements'));
+        croak "Unsupported thing '" . $step->content . "' in the path (step #$sc)" unless ($step->can('elements'));
         for my $item ($step->elements) {
             $item->prune('PPI::Token::Whitespace') if $item->can('prune');
 
@@ -76,7 +77,7 @@ sub ps_parse($) {
                     } elsif ($t->isa('PPI::Token::Quote')) {
                         $key = substr(substr($t->content, 1), 0, -1);
                     } else {
-                        croak "Unsupported thing '" . $t->content . "' in hash key specification";
+                        croak "Unsupported thing '" . $t->content . "' in hash key specification (step #$sc)";
                     }
                     $out->[-1]->{$key} = keys %{$out->[-1]};
                 }
@@ -87,7 +88,7 @@ sub ps_parse($) {
                     if ($t->isa('PPI::Token::Number')) {
                         if ($is_range) {
                             my $start = pop(@{$out->[-1]});
-                            croak "Undefined start for range" unless (defined $start);
+                            croak "Undefined start for range (step #$sc)" unless (defined $start);
                             push @{$out->[-1]},
                                 ($start < $t->content ? $start..$t->content : reverse $t->content..$start);
                             $is_range = undef;
@@ -99,14 +100,15 @@ sub ps_parse($) {
                     } elsif ($t->isa('PPI::Token::Operator') and $t->content eq '..') {
                         $is_range = $t;
                     } else {
-                        croak "Unsupported thing '" . $t->content . "' in array item specification";
+                        croak "Unsupported thing '" . $t->content . "' in array item specification (step #$sc)";
                     }
                 }
-                croak "Unfinished range secified" if ($is_range);
+                croak "Unfinished range secified (step #$sc)" if ($is_range);
             } else {
-                croak "Unsupported thing '" . $item->content . "' in the path" ;
+                croak "Unsupported thing '" . $item->content . "' in the path (step #$sc)" ;
             }
         }
+        $sc++;
     }
 
     return $out;
@@ -122,7 +124,7 @@ Serialize L<Struct::Path|Struct::Path> path to perl-style string
 
 sub ps_serialize($) {
     my $path = shift;
-    croak "Path must be arrayref" unless (ref $path eq 'ARRAY');
+    croak "Path must be an arrayref" unless (ref $path eq 'ARRAY');
 
     my $out = '';
     my $sc = 0; # step counter
@@ -146,6 +148,7 @@ sub ps_serialize($) {
         } else {
             croak "Unsupported thing in the path (step #$sc)";
         }
+        $sc++;
     }
 
     return $out;
