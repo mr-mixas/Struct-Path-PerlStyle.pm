@@ -21,6 +21,7 @@ WriteMakefile(
     PREREQ_PM => {
         'Carp'         => 0,
         'PPI'          => 0,
+        'Scalar::Util' => 0,
         'parent'       => 0,
         'strict'       => 0,
         'warnings'     => 0
