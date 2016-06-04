@@ -6,6 +6,7 @@ use warnings FATAL => 'all';
 use parent qw(Exporter);
 use Carp qw(croak);
 use PPI::Lexer qw();
+use Scalar::Util qw(looks_like_number);
 
 our @EXPORT_OK = qw(ps_parse ps_serialize);
 
@@ -133,6 +134,8 @@ sub ps_serialize($) {
         if (ref $step eq 'ARRAY') {
             my @ranges;
             for my $i (@{$step}) {
+                croak "Incorrect array index '$i' (step #$sc)"
+                    unless (looks_like_number($i) and int($i) == $i);
                 if (@ranges and (
                     ($ranges[-1][1] + 1 == $i and $ranges[-1][0] <= $ranges[-1][1]) or   # ascending range
                     ($ranges[-1][1] - 1 == $i and $ranges[-1][0] >= $ranges[-1][1])      # descending range

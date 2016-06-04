@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 10;
+use Test::More tests => 12;
 
 use Struct::Path::PerlStyle qw(ps_serialize);
 
@@ -31,6 +31,15 @@ $str = ps_serialize([{a => 1,b => 0},{c => 0,d => 1}]);
 ok($str eq '{b,a}{c,d}');
 
 ### ARRAYS ###
+
+# garbage: non number as index
+eval { $str = ps_serialize([["a"]]) };
+ok($@ =~ /^Incorrect array index 'a' \(step #0\)/);
+
+# garbage: float point as index
+eval { $str = ps_serialize([[0.3]]) };
+ok($@ =~ /^Incorrect array index '0.3' \(step #0\)/);
+
 # simple array path
 $str = ps_serialize([[2],[],[0]]);
 ok($str eq '[2][][0]');
