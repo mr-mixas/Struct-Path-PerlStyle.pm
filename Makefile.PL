@@ -18,6 +18,11 @@ WriteMakefile(
         'Data::Dumper' => 0,
         'Test::More'   => 0,
     },
+    META_MERGE => {
+        resources => {
+            repository  => 'https://github.com/mr-mixas/Struct-Path-PerlStyle.pm',
+        },
+    },
     PREREQ_PM => {
         'Carp'         => 0,
         'PPI'          => 0,
