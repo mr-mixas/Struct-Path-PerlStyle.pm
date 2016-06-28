@@ -16,11 +16,11 @@ Struct::Path::PerlStyle - Perl-style syntax frontend for L<Struct::Path|Struct::
 
 =head1 VERSION
 
-Version 0.05
+Version 0.20
 
 =cut
 
-our $VERSION = '0.05';
+our $VERSION = '0.20';
 
 =head1 SYNOPSIS
 
@@ -80,7 +80,7 @@ sub ps_parse($) {
                     } else {
                         croak "Unsupported thing '" . $t->content . "' in hash key specification (step #$sc)";
                     }
-                    $out->[-1]->{$key} = keys %{$out->[-1]};
+                    push @{$out->[-1]->{keys}}, $key;
                 }
             } elsif ($item->isa('PPI::Structure::Constructor') and $item->first_token->content eq '[') {
                 push @{$out}, [];
@@ -147,7 +147,9 @@ sub ps_serialize($) {
             }
             $out .= "[" . join(",", map { $_->[0] != $_->[1] ? "$_->[0]..$_->[1]" : $_->[0] } @{ranges}) . "]";
         } elsif (ref $step eq 'HASH') {
-            $out .= "{" . join(",", sort { $step->{$a} <=> $step->{$b} } keys %{$step}) . "}";
+            croak "Unsupported hash definition (step #$sc)"
+                if (keys %{$step} and (not exists $step->{keys} or ref $step->{keys} ne 'ARRAY'));
+            $out .= "{" . join(",", exists $step->{keys} ? @{$step->{keys}} : "") . "}";
         } else {
             croak "Unsupported thing in the path (step #$sc)";
         }

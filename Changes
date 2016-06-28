@@ -1,5 +1,8 @@
 Revision history for Struct-Path-PerlStyle
 
+0.20    2016-06-28
+        Path structure changed according Struct::Path's v0.20
+
 0.05    2016-06-03
         ranges supported in ps_serialize()
 

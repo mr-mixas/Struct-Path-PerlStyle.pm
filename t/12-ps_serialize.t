@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 12;
+use Test::More tests => 14;
 
 use Struct::Path::PerlStyle qw(ps_serialize);
 
@@ -10,24 +10,32 @@ my $str;
 
 # undef path
 eval { $str = ps_serialize(undef) };
-ok($@ =~ '^Path must be an arrayref');
+ok($@ =~ /^Path must be an arrayref/);
 
 # empty path
 $str = ps_serialize([]);
 ok($str eq '');
 
+# trash in hash definition #1
+eval { $str = ps_serialize([{garbage => ['a']}]) };
+ok($@ =~ /^Unsupported hash definition \(step #0\)/);
+
+# trash in hash definition #2
+eval { $str = ps_serialize([{garbage => 'a'}]) };
+ok($@ =~ /^Unsupported hash definition \(step #0\)/);
+
 ### HASHES ###
 
 # empty hash path
-$str = ps_serialize([{a => undef},{},{c => 0.18}]);
+$str = ps_serialize([{keys => ['a']},{},{keys => ['c']}]);
 ok($str eq '{a}{}{c}');
 
 # simple hash path
-$str = ps_serialize([{a => undef},{b => 0},{c => 0.18}]);
+$str = ps_serialize([{keys => ['a']},{keys => ['b']},{keys => ['c']}]);
 ok($str eq '{a}{b}{c}');
 
 # order specified hash path
-$str = ps_serialize([{a => 1,b => 0},{c => 0,d => 1}]);
+$str = ps_serialize([{keys => ['b','a']},{keys => ['c','d']}]);
 ok($str eq '{b,a}{c,d}');
 
 ### ARRAYS ###

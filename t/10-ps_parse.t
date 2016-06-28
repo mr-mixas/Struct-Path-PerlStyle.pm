@@ -66,13 +66,13 @@ ok($@ =~ m/^Unfinished range secified/);
 # Plain hash path
 ok(pcmp(
     '{a}{b}{c}',
-    [{a => 0},{b => 0},{c => 0}]
+    [{keys => ['a']},{keys => ['b']},{keys => ['c']}]
 ));
 
 # Hash path with slices and whitespace garbage
 ok(pcmp(
     '{ c,a, b}{e  ,d }',
-    [{c => 0,a => 1,b => 2},{e => 0,d => 1}]
+    [{keys => ['c','a','b']},{keys => ['e','d']}]
 ));
 
 # Empty hash path
@@ -84,19 +84,19 @@ ok(pcmp(
 # Spaces as delimiters
 ok(pcmp(
     '{a b}{e d}',
-    [{a => 0,b => 1},{e => 0,d => 1}]
+    [{keys => ['a','b']},{keys => ['e','d']}]
 ));
 
 # Quotes
 ok(pcmp(
     "{'a', 'b'}{' c d'}",
-    [{a => 0,b => 1},{' c d' => 0}]
+    [{keys => ['a','b']},{keys => [' c d']}]
 ));
 
 # Double quotes
 ok(pcmp(
     '{"a", "b"}{" c d"}',
-    [{a => 0,b => 1},{' c d' => 0}]
+    [{keys => ['a','b']},{keys => [' c d']}]
 ));
 
 ### ARRAYS ###
