@@ -21,7 +21,7 @@ eval { $str = ps_serialize([{garbage => ['a']}]) };
 ok($@ =~ /^Unsupported hash definition \(step #0\)/);
 
 # trash in hash definition #2
-eval { $str = ps_serialize([{garbage => 'a'}]) };
+eval { $str = ps_serialize([{keys => 'a'}]) };
 ok($@ =~ /^Unsupported hash definition \(step #0\)/);
 
 ### HASHES ###

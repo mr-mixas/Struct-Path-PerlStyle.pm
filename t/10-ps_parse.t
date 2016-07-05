@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 use Data::Dumper;
-use Test::More tests => 22;
+use Test::More tests => 24;
 
 use Struct::Path::PerlStyle qw(ps_parse);
 
@@ -53,6 +53,10 @@ ok($@ =~ m/^Unsupported thing '\(0\)' in the path/);
 eval { pcmp('[[0]]', []) };
 ok($@ =~ m/^Unsupported thing '\[0\]' in array item specification/);
 
+# garbage in index definition
+eval { pcmp('[0-2]', []) };
+ok($@ =~ m/^Unsupported thing '-' in array item specification \(step #0\)/);
+
 # range with one boundary
 eval { pcmp('[..3]', []) };
 ok($@ =~ m/^Undefined start for range/);
@@ -60,6 +64,10 @@ ok($@ =~ m/^Undefined start for range/);
 # range with one boundary2
 eval { pcmp('[4..]', []) };
 ok($@ =~ m/^Unfinished range secified/);
+
+# garbage in hash keys definition
+eval { pcmp('{a}{b+c}', []) };
+ok($@ =~ m/^Unsupported thing '\+' in hash key specification \(step #1\)/);
 
 ### HASHES ###
 
