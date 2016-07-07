@@ -16,11 +16,11 @@ Struct::Path::PerlStyle - Perl-style syntax frontend for L<Struct::Path|Struct::
 
 =head1 VERSION
 
-Version 0.20
+Version 0.21
 
 =cut
 
-our $VERSION = '0.20';
+our $VERSION = '0.21';
 
 =head1 SYNOPSIS
 
@@ -66,8 +66,8 @@ sub ps_parse($) {
         for my $item ($step->elements) {
             $item->prune('PPI::Token::Whitespace') if $item->can('prune');
 
-            if ($item->isa('PPI::Structure::Block') or
-                ($item->isa('PPI::Structure::Constructor') and $item->first_token->content eq '{')) {
+            if ($item->isa('PPI::Structure::Constructor') and $item->first_token->content eq '{' or
+                $item->isa('PPI::Structure::Block')) {
                 push @{$out}, {};
                 for my $t (map { $_->elements } $item->children) {
                     my $key;
@@ -82,7 +82,7 @@ sub ps_parse($) {
                     }
                     push @{$out->[-1]->{keys}}, $key;
                 }
-            } elsif ($item->isa('PPI::Structure::Constructor') and $item->first_token->content eq '[') {
+            } elsif ($item->isa('PPI::Structure::Constructor')) { # PPI::Structure::Constructor is hash/array constructir only
                 push @{$out}, [];
                 my $is_range;
                 for my $t (map { $_->elements } $item->children) {
@@ -148,7 +148,7 @@ sub ps_serialize($) {
             $out .= "[" . join(",", map { $_->[0] != $_->[1] ? "$_->[0]..$_->[1]" : $_->[0] } @{ranges}) . "]";
         } elsif (ref $step eq 'HASH') {
             croak "Unsupported hash definition (step #$sc)"
-                if (keys %{$step} and (not exists $step->{keys} or ref $step->{keys} ne 'ARRAY'));
+                if (keys %{$step} and not (exists $step->{keys} and ref $step->{keys} eq 'ARRAY'));
             $out .= "{" . join(",", exists $step->{keys} ? @{$step->{keys}} : "") . "}";
         } else {
             croak "Unsupported thing in the path (step #$sc)";
