@@ -1,5 +1,9 @@
 Revision history for Struct-Path-PerlStyle
 
+0.21    2016-07-07
+        Refactoring
+        Tests coverage improved
+
 0.20    2016-06-28
         Path structure changed according Struct::Path's v0.20
 
