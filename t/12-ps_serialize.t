@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 14;
+use Test::More tests => 16;
 
 use Struct::Path::PerlStyle qw(ps_serialize);
 
@@ -15,6 +15,10 @@ ok($@ =~ /^Path must be an arrayref/);
 # empty path
 $str = ps_serialize([]);
 ok($str eq '');
+
+# trash as path step
+eval { $str = ps_serialize([{},"garbage"]) };
+ok($@ =~ /^Unsupported thing in the path \(step #1\)/);
 
 # trash in hash definition #1
 eval { $str = ps_serialize([{garbage => ['a']}]) };
@@ -68,3 +72,6 @@ ok($str eq '[0..2][6..8,10]');
 $str = ps_serialize([[2,1,0],[10,8,7,6]]);
 ok($str eq '[2..0][10,8..6]');
 
+# Bidirectional ranges
+$str = ps_serialize([[-2,-1,0,1,2,1,0,-1,-2]]);
+ok($str eq '[-2..2,1..-2]');
