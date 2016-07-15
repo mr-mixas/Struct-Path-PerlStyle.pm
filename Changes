@@ -1,5 +1,9 @@
 Revision history for Struct-Path-PerlStyle
 
+0.22    2016-07-15
+        Keys with spaces/tabs now quoted in ps_serialize()
+        Croak if floating-point array index definition passed to ps_parse()
+
 0.21    2016-07-07
         Refactoring
         Tests coverage improved
