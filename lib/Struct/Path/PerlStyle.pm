@@ -16,22 +16,22 @@ Struct::Path::PerlStyle - Perl-style syntax frontend for L<Struct::Path|Struct::
 
 =head1 VERSION
 
-Version 0.21
+Version 0.22
 
 =cut
 
-our $VERSION = '0.21';
+our $VERSION = '0.22';
 
 =head1 SYNOPSIS
 
     use Struct::Path::PerlStyle qw(ps_parse ps_serialize);
 
-    $struct = ps_parse('{a}{b}[1]');    # L<Struct::Path|Struct::Path> compatible
+    $struct = ps_parse('{a}{b}[1]');    # Struct::Path compatible
     $string = ps_serialize($struct);    # convert Struct::Path path to string
 
 =head1 EXPORT
 
-Nothing exports by default.
+Nothing is exported by default.
 
 =head1 SUBROUTINES
 
@@ -46,7 +46,8 @@ Path syntax examples:
     "{a}{b}"              # means b's value
     "{a}{}"               # all values from a's subhash; same for arrays (using empty square brackets)
     "{a}{b,c}"            # b's and c's values
-    "{a}{b c}"            # same, space is also a delimiter (except if quoted)
+    "{a}{b c}"            # same, space is also a delimiter
+    "{a}{'space inside'}" # keys with spaces/tabs must be quoted (double quotes supported as well)
     "{a}{b}[0,1,2,5]"     # 0, 1, 2 and 5 array's items
     "{a}{b}[0..2,5]"      # same, but using ranges
     "{a}{b}[9..0]"        # descending ranges allowed (perl doesn't)
@@ -149,7 +150,8 @@ sub ps_serialize($) {
         } elsif (ref $step eq 'HASH') {
             croak "Unsupported hash definition (step #$sc)"
                 if (keys %{$step} and not (exists $step->{keys} and ref $step->{keys} eq 'ARRAY'));
-            $out .= "{" . join(",", exists $step->{keys} ? @{$step->{keys}} : "") . "}";
+            my @items = exists $step->{keys} ? map { split(/\s/, $_, -1) > 1 ? "'$_'" : $_ } @{$step->{keys}} : "";
+            $out .= "{" . join(",", @items) . "}";
         } else {
             croak "Unsupported thing in the path (step #$sc)";
         }

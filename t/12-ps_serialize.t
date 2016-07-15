@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 16;
+use Test::More tests => 18;
 
 use Struct::Path::PerlStyle qw(ps_serialize);
 
@@ -41,6 +41,14 @@ ok($str eq '{a}{b}{c}');
 # order specified hash path
 $str = ps_serialize([{keys => ['b','a']},{keys => ['c','d']}]);
 ok($str eq '{b,a}{c,d}');
+
+# quotes for spaces
+$str = ps_serialize([{keys => ['three   spaces']},{keys => ['two  spases']},{keys => ['one ']},{keys => ['none']}]);
+ok($str eq "{'three   spaces'}{'two  spases'}{'one '}{none}");
+
+# quotes for tabs
+$str = ps_serialize([{keys => ['three			tabs']},{keys => ['two		tabs']},{keys => ['one	']},{keys => ['none']}]);
+ok($str eq "{'three			tabs'}{'two		tabs'}{'one	'}{none}");
 
 ### ARRAYS ###
 
