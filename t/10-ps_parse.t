@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 use Data::Dumper;
-use Test::More tests => 24;
+use Test::More tests => 26;
 
 use Struct::Path::PerlStyle qw(ps_parse);
 
@@ -21,7 +21,7 @@ ok($@);
 
 # non-scalar path
 eval { pcmp({}, []) };
-ok($@);
+ok($@ =~ m/^Failed to parse passed path 'HASH\(/);
 
 # empty path
 ok(pcmp(
@@ -64,6 +64,10 @@ ok($@ =~ m/^Undefined start for range/);
 # range with one boundary2
 eval { pcmp('[4..]', []) };
 ok($@ =~ m/^Unfinished range secified/);
+
+# floating point array indexes
+eval { pcmp('[3.1415]', []) };
+ok($@ =~ m/^Floating-point numbers not allowed as array indexes \(step #0\)/);
 
 # garbage in hash keys definition
 eval { pcmp('{a}{b+c}', []) };
@@ -133,9 +137,14 @@ ok(pcmp(
     [[],[],[]]
 ));
 
-# float point indexes
+# float point indexes with zero after dot is allowed
 ok(pcmp(
-    '[0.3][][3.12]',
-    [[0.3],[],[3.12]]
+    '[0.0][1][2.0]',
+    [[0],[1],[2]]
 ));
 
+# big numbers
+ok(pcmp(
+    '[99999999999999999999]',
+    [['1e+20']]
+));

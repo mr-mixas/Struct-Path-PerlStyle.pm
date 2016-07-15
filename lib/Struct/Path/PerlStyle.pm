@@ -88,6 +88,8 @@ sub ps_parse($) {
                 my $is_range;
                 for my $t (map { $_->elements } $item->children) {
                     if ($t->isa('PPI::Token::Number')) {
+                        croak "Floating-point numbers not allowed as array indexes (step #$sc)"
+                            unless ($t->content == int($t->content));
                         if ($is_range) {
                             my $start = pop(@{$out->[-1]});
                             croak "Undefined start for range (step #$sc)" unless (defined $start);
@@ -95,7 +97,7 @@ sub ps_parse($) {
                                 ($start < $t->content ? $start..$t->content : reverse $t->content..$start);
                             $is_range = undef;
                         } else {
-                            push @{$out->[-1]}, $t->content + 0;
+                            push @{$out->[-1]}, int($t->content);
                         }
                     } elsif ($t->isa('PPI::Token::Operator') and $t->content eq ',') {
                         $is_range = undef;
