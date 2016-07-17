@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 use Data::Dumper;
-use Test::More tests => 25;
+use Test::More tests => 26;
 
 use Struct::Path::PerlStyle qw(ps_parse);
 
@@ -141,4 +141,10 @@ ok(pcmp(
 ok(pcmp(
     '[0.0][1][2.0]',
     [[0],[1],[2]]
+));
+
+# negative indexes
+ok(pcmp(
+    '[0][-1][-2]',
+    [[0],[-1],[-2]]
 ));
