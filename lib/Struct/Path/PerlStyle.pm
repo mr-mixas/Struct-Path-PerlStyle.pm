@@ -150,9 +150,15 @@ sub ps_serialize($) {
             }
             $out .= "[" . join(",", map { $_->[0] != $_->[1] ? "$_->[0]..$_->[1]" : $_->[0] } @{ranges}) . "]";
         } elsif (ref $step eq 'HASH') {
-            croak "Unsupported hash definition (step #$sc)"
-                if (keys %{$step} and not (exists $step->{keys} and ref $step->{keys} eq 'ARRAY'));
-            my @items = exists $step->{keys} ? map { split(/\s/, $_, -1) > 1 ? "'$_'" : $_ } @{$step->{keys}} : "";
+            my @items;
+            if (keys %{$step} == 1 and exists $step->{keys} and ref $step->{keys} eq 'ARRAY' or not keys %{$step}) {
+                for my $k (@{$step->{keys}}) {
+                    $k = "'$k'" if ($k =~ /\s/);
+                    push @items, $k;
+                }
+            } else {
+                croak "Unsupported hash definition (step #$sc)";
+            }
             $out .= "{" . join(",", @items) . "}";
         } else {
             croak "Unsupported thing in the path (step #$sc)";
