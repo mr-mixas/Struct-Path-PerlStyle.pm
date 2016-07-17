@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 18;
+use Test::More tests => 20;
 
 use Struct::Path::PerlStyle qw(ps_serialize);
 
@@ -26,6 +26,10 @@ ok($@ =~ /^Unsupported hash definition \(step #0\)/);
 
 # trash in hash definition #2
 eval { $str = ps_serialize([{keys => 'a'}]) };
+ok($@ =~ /^Unsupported hash definition \(step #0\)/);
+
+# trash in hash definition #3
+eval { $str = ps_serialize([{keys => ['a'], garbage => ['b']}]) };
 ok($@ =~ /^Unsupported hash definition \(step #0\)/);
 
 ### HASHES ###
@@ -67,6 +71,10 @@ ok($str eq '[2][][0]');
 # simple array path
 $str = ps_serialize([[2],[5],[0]]);
 ok($str eq '[2][5][0]');
+
+# negative indexes
+$str = ps_serialize([[-2],[-5],[0]]);
+ok($str eq '[-2][-5][0]');
 
 # Array path with slices
 $str = ps_serialize([[0,2],[7,5,2]]);
