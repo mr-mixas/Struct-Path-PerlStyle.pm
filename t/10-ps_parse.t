@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 use Data::Dumper;
-use Test::More tests => 26;
+use Test::More tests => 25;
 
 use Struct::Path::PerlStyle qw(ps_parse);
 
@@ -141,10 +141,4 @@ ok(pcmp(
 ok(pcmp(
     '[0.0][1][2.0]',
     [[0],[1],[2]]
-));
-
-# big numbers
-ok(pcmp(
-    '[99999999999999999999]',
-    [['1e+20']]
 ));
