@@ -32,5 +32,5 @@ WriteMakefile(
         'warnings'     => 0
     },
     dist  => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
-    clean => { FILES => 'Struct-Path-PerlStyle-*' },
+    clean => { FILES => 'Struct-Path-PerlStyle-* cover_db' },
 );
