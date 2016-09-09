@@ -4,7 +4,7 @@ Struct::Path::PerlStyle - Perl-style syntax frontend for [Struct::Path](https://
 
 # VERSION
 
-Version 0.23
+Version 0.24
 
 # SYNOPSIS
 

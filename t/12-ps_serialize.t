@@ -2,7 +2,10 @@
 
 use strict;
 use warnings;
-use Test::More tests => 20;
+use Test::More tests => 21;
+use Storable qw(freeze);
+
+$Storable::canonical = 1;
 
 use Struct::Path::PerlStyle qw(ps_serialize);
 
@@ -47,8 +50,11 @@ $str = ps_serialize([{keys => ['b','a']},{keys => ['c','d']}]);
 ok($str eq '{b,a}{c,d}');
 
 # quotes for spaces
-$str = ps_serialize([{keys => ['three   spaces']},{keys => ['two  spases']},{keys => ['one ']},{keys => ['none']}]);
+my $path = [{keys => ['three   spaces']},{keys => ['two  spases']},{keys => ['one ']},{keys => ['none']}];
+my $frozen = freeze($path);
+$str = ps_serialize($path);
 ok($str eq "{'three   spaces'}{'two  spases'}{'one '}{none}");
+ok($frozen eq freeze($path)); # musst remain unchanged
 
 # quotes for tabs
 $str = ps_serialize([{keys => ['three			tabs']},{keys => ['two		tabs']},{keys => ['one	']},{keys => ['none']}]);

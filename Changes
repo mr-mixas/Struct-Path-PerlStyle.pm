@@ -1,5 +1,8 @@
 Revision history for Struct-Path-PerlStyle
 
+0.24    2016-09-09
+        passed path corruption fixed (for multiword keys)
+
 0.23    2016-07-17
         perl 5.10 and below compatibility fixed for ps_serialize()
         more strict hash definition check for ps_serialize()
