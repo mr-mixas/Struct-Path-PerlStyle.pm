@@ -3,14 +3,14 @@
 use strict;
 use warnings;
 use Data::Dumper;
-use Test::More tests => 26;
+use Test::More tests => 27;
 
 use Struct::Path::PerlStyle qw(ps_parse);
 
 sub pcmp($$) {
     my $str = shift;
-    my $got = Data::Dumper->new([ps_parse($str)])->Terse(1)->Sortkeys(1)->Quotekeys(0)->Indent(0)->Dump();
-    my $exp = Data::Dumper->new([shift])->Terse(1)->Sortkeys(1)->Quotekeys(0)->Indent(0)->Dump();
+    my $got = Data::Dumper->new([ps_parse($str)])->Terse(1)->Sortkeys(1)->Quotekeys(0)->Deparse(1)->Indent(0)->Dump();
+    my $exp = Data::Dumper->new([shift])->Terse(1)->Sortkeys(1)->Quotekeys(0)->Deparse(1)->Indent(0)->Dump();
     print STDERR "\nDEBUG for '$str':\ngot: $got\nexp: $exp\n" if ($ENV{DEBUG});;
     return $got eq $exp;
 }
@@ -147,4 +147,10 @@ ok(pcmp(
 ok(pcmp(
     '[0][-1][-2]',
     [[0],[-1],[-2]]
+));
+
+# step back
+ok(pcmp(
+    '[0]<[-2]',
+    [[0],$Struct::Path::PerlStyle::OPERATORS->{'<'},[-2]]
 ));

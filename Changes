@@ -1,5 +1,8 @@
 Revision history for Struct-Path-PerlStyle
 
+0.30    2016-09-12
+        Operators support added to ps_parse()
+
 0.24    2016-09-09
         passed path corruption fixed (for multiword keys)
 

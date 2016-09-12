@@ -4,7 +4,7 @@ Struct::Path::PerlStyle - Perl-style syntax frontend for [Struct::Path](https://
 
 # VERSION
 
-Version 0.24
+Version 0.30
 
 # SYNOPSIS
 
@@ -35,6 +35,7 @@ Path syntax examples:
     "{a}{b}[0,1,2,5]"     # 0, 1, 2 and 5 array's items
     "{a}{b}[0..2,5]"      # same, but using ranges
     "{a}{b}[9..0]"        # descending ranges allowed (perl doesn't)
+    "{a}{b}<{c}"          # step back (perl incompatible)
 
 ## ps\_serialize
 
