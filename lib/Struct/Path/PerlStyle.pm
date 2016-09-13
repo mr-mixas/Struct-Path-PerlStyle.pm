@@ -16,11 +16,11 @@ Struct::Path::PerlStyle - Perl-style syntax frontend for L<Struct::Path|Struct::
 
 =head1 VERSION
 
-Version 0.30
+Version 0.31
 
 =cut
 
-our $VERSION = '0.30';
+our $VERSION = '0.31';
 
 =head1 SYNOPSIS
 
@@ -133,6 +133,7 @@ sub ps_parse($) {
 Serialize L<Struct::Path|Struct::Path> path to perl-style string
 
     $string = ps_serialize($struct_path);
+    @steps = ps_serialize($struct_path);  # list of serialized steps in list context
 
 =cut
 
@@ -140,7 +141,7 @@ sub ps_serialize($) {
     my $path = shift;
     croak "Path must be an arrayref" unless (ref $path eq 'ARRAY');
 
-    my $out = '';
+    my @out;
     my $sc = 0; # step counter
 
     for my $step (@{$path}) {
@@ -158,7 +159,7 @@ sub ps_serialize($) {
                     push @ranges, [$i, $i];
                 }
             }
-            $out .= "[" . join(",", map { $_->[0] != $_->[1] ? "$_->[0]..$_->[1]" : $_->[0] } @{ranges}) . "]";
+            push @out, "[" . join(",", map { $_->[0] != $_->[1] ? "$_->[0]..$_->[1]" : $_->[0] } @{ranges}) . "]";
         } elsif (ref $step eq 'HASH') {
             my @items;
             if (keys %{$step} == 1 and exists $step->{keys} and ref $step->{keys} eq 'ARRAY' or not keys %{$step}) {
@@ -166,14 +167,14 @@ sub ps_serialize($) {
             } else {
                 croak "Unsupported hash definition (step #$sc)";
             }
-            $out .= "{" . join(",", @items) . "}";
+            push @out, "{" . join(",", @items) . "}";
         } else {
             croak "Unsupported thing in the path (step #$sc)";
         }
         $sc++;
     }
 
-    return $out;
+    return wantarray ? @out : join('', @out);
 }
 
 =head1 AUTHOR
