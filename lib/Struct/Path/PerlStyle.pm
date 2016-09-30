@@ -16,11 +16,11 @@ Struct::Path::PerlStyle - Perl-style syntax frontend for L<Struct::Path|Struct::
 
 =head1 VERSION
 
-Version 0.31
+Version 0.32
 
 =cut
 
-our $VERSION = '0.31';
+our $VERSION = '0.32';
 
 =head1 SYNOPSIS
 
@@ -80,7 +80,7 @@ sub ps_parse($) {
                 push @{$out}, {};
                 for my $t (map { $_->elements } $item->children) {
                     my $key;
-                    if ($t->isa('PPI::Token::Word')) {
+                    if ($t->isa('PPI::Token::Word') or $t->isa('PPI::Token::Number')) {
                         $key = $t->content;
                     } elsif ($t->isa('PPI::Token::Operator') and $t->content eq ',') {
                         next;

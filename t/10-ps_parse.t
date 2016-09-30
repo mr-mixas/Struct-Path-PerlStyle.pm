@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 use Data::Dumper;
-use Test::More tests => 27;
+use Test::More tests => 28;
 
 use Struct::Path::PerlStyle qw(ps_parse);
 
@@ -74,6 +74,12 @@ eval { pcmp('{a}{b+c}', []) };
 ok($@ =~ m/^Unsupported thing '\+' in hash key specification \(step #1\)/);
 
 ### HASHES ###
+
+# numbers as hash keys
+is_deeply(
+    ps_parse('{0}{01}{"2"}'),
+    [{keys => [0]},{keys => ["01"]},{keys => [2]}]
+);
 
 # Plain hash path
 ok(pcmp(
