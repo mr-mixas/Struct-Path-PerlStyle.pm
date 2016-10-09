@@ -15,7 +15,6 @@ WriteMakefile(
         'ExtUtils::MakeMaker' => 0,
     },
     BUILD_REQUIRES => {
-        'Data::Dumper' => 0,
         'Storable'     => 0,
         'Test::More'   => 0,
     },
