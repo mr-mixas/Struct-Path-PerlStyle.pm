@@ -42,7 +42,6 @@ Path syntax examples:
 Serialize [Struct::Path](https://metacpan.org/pod/Struct::Path) path to perl-style string
 
     $string = ps_serialize($struct_path);
-    @steps = ps_serialize($struct_path);  # list of serialized steps in list context
 
 # AUTHOR
 

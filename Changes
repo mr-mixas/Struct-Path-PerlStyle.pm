@@ -1,5 +1,10 @@
 Revision history for Struct-Path-PerlStyle
 
+0.32    2016-10-16
+        bare numbers as hash keys now works correctly
+        get rid of list context for ps_serialize()'s out (ambigous)
+        tests refactored
+
 0.31    2016-09-13
         ps_serialize() now returns list of serialized steps in list context
 

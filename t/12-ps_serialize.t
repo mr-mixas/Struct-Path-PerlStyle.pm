@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 22;
+use Test::More tests => 21;
 use Storable qw(freeze);
 
 $Storable::canonical = 1;
@@ -97,11 +97,3 @@ ok($str eq '[2..0][10,8..6]');
 # Bidirectional ranges
 $str = ps_serialize([[-2,-1,0,1,2,1,0,-1,-2]]);
 ok($str eq '[-2..2,1..-2]');
-
-# list must be returned in list context
-my @list = ps_serialize([{keys => ['a']},{keys => ['b']},{keys => ['c']}]);
-is_deeply(
-    [@list],
-    ['{a}','{b}','{c}'],
-    '{a}{b}{c} in list context'
-)
