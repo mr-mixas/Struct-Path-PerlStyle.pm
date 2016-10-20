@@ -4,7 +4,7 @@ Struct::Path::PerlStyle - Perl-style syntax frontend for [Struct::Path](https://
 
 # VERSION
 
-Version 0.32
+Version 0.33
 
 # SYNOPSIS
 
@@ -17,15 +17,9 @@ Version 0.32
 
 Nothing is exported by default.
 
-# SUBROUTINES
+# PATH SYNTAX
 
-## ps\_parse
-
-Parse perl-style string to [Struct::Path](https://metacpan.org/pod/Struct::Path) path
-
-    $struct_path = ps_parse($string);
-
-Path syntax examples:
+Examples:
 
     "{a}{b}"              # means b's value
     "{a}{}"               # all values from a's subhash; same for arrays (using empty square brackets)
@@ -36,6 +30,16 @@ Path syntax examples:
     "{a}{b}[0..2,5]"      # same, but using ranges
     "{a}{b}[9..0]"        # descending ranges allowed (perl doesn't)
     "{a}{b}<{c}"          # step back (perl incompatible)
+
+
+
+# SUBROUTINES
+
+## ps\_parse
+
+Parse perl-style string to [Struct::Path](https://metacpan.org/pod/Struct::Path) path
+
+    $struct_path = ps_parse($string);
 
 ## ps\_serialize
 
