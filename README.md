@@ -4,7 +4,7 @@ Struct::Path::PerlStyle - Perl-style syntax frontend for [Struct::Path](https://
 
 # VERSION
 
-Version 0.33
+Version 0.40
 
 # SYNOPSIS
 
@@ -30,8 +30,7 @@ Examples:
     "{a}{b}[0..2,5]"      # same, but using ranges
     "{a}{b}[9..0]"        # descending ranges allowed (perl doesn't)
     "{a}{b}<{c}"          # step back (perl incompatible)
-
-
+    "{a}{/regexp/}"       # regexp keys match
 
 # SUBROUTINES
 

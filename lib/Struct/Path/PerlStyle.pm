@@ -16,11 +16,11 @@ Struct::Path::PerlStyle - Perl-style syntax frontend for L<Struct::Path|Struct::
 
 =head1 VERSION
 
-Version 0.33
+Version 0.40
 
 =cut
 
-our $VERSION = '0.33';
+our $VERSION = '0.40';
 
 =head1 SYNOPSIS
 
@@ -46,7 +46,7 @@ Examples:
     "{a}{b}[0..2,5]"      # same, but using ranges
     "{a}{b}[9..0]"        # descending ranges allowed (perl doesn't)
     "{a}{b}<{c}"          # step back (perl incompatible)
-
+    "{a}{/regexp/}"       # regexp keys match
 
 =head1 SUBROUTINES
 
@@ -82,17 +82,20 @@ sub ps_parse($) {
                 $item->isa('PPI::Structure::Block')) {
                 push @{$out}, {};
                 for my $t (map { $_->elements } $item->children) {
-                    my $key;
+                    my $tmp;
                     if ($t->isa('PPI::Token::Word') or $t->isa('PPI::Token::Number')) {
-                        $key = $t->content;
+                        $tmp->{keys} = $t->content;
                     } elsif ($t->isa('PPI::Token::Operator') and $t->content eq ',') {
                         next;
                     } elsif ($t->isa('PPI::Token::Quote')) {
-                        $key = substr(substr($t->content, 1), 0, -1);
+                        $tmp->{keys} = substr(substr($t->content, 1), 0, -1);
+                    } elsif ($t->isa('PPI::Token::Regexp::Match')) {
+                        $tmp->{regs} = substr(substr($t->content, 1), 0, -1); # get rid of slashes
+                        $tmp->{regs} = qr($tmp->{regs});
                     } else {
                         croak "Unsupported thing '" . $t->content . "' in hash key specification (step #$sc)";
                     }
-                    push @{$out->[-1]->{keys}}, $key;
+                    map { push @{$out->[-1]->{$_}}, delete $tmp->{$_} } keys %{$tmp};
                 }
             } elsif ($item->isa('PPI::Structure::Constructor')) { # PPI::Structure::Constructor is hash/array constructir only
                 push @{$out}, [];

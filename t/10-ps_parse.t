@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 use Struct::Path::PerlStyle qw(ps_parse);
-use Test::More tests => 28;
+use Test::More tests => 32;
 
 ### EXCEPTIONS ###
 
@@ -45,6 +45,9 @@ like($@, qr/^Floating-point numbers not allowed as array indexes \(step #0\)/, "
 
 eval { ps_parse('{a}{b+c}') };
 like($@, qr/^Unsupported thing '\+' in hash key specification \(step #1\)/, "garbage in hash keys definition");
+
+eval { ps_parse('{/a//}') };
+like($@, qr|^Unsupported thing '/' in hash key specification \(step #0\)|, "regexp and one more slash");
 
 ### EMPTY PATH ###
 
@@ -96,6 +99,24 @@ is_deeply(
     ps_parse('{"a", "b"}{" c d"}'),
     [{keys => ['a','b']},{keys => [' c d']}],
     "double quotes"
+);
+
+is_deeply(
+    ps_parse('{"a", "b"}{/^abc[d..g]/}'),
+    [{keys => ['a','b']},{regs => [qr/^abc[d..g]/]}],
+    "regexp match"
+);
+
+is_deeply(
+    ps_parse('{"a", "b"}{/^abc[d..g]/ mixed with,regular keys}'),
+    [{keys => ['a','b']},{regs => [qr/^abc[d..g]/], keys => ['mixed','with','regular','keys']}],
+    "regexp match mixed with regular keys"
+);
+
+is_deeply(
+    ps_parse('{"a", "b"}{/^abc[d..g]/,/another/}'),
+    [{keys => ['a','b']},{regs => [qr/^abc[d..g]/,qr/another/]}],
+    "more than one regexp"
 );
 
 ### ARRAYS ###
