@@ -4,7 +4,7 @@ use 5.006;
 use strict;
 use warnings FATAL => 'all';
 use parent qw(Exporter);
-use Carp qw(croak);
+use Carp qw(carp croak);
 use PPI::Lexer qw();
 use Scalar::Util qw(looks_like_number);
 
@@ -16,11 +16,11 @@ Struct::Path::PerlStyle - Perl-style syntax frontend for L<Struct::Path|Struct::
 
 =head1 VERSION
 
-Version 0.40
+Version 0.41
 
 =cut
 
-our $VERSION = '0.40';
+our $VERSION = '0.41';
 
 =head1 SYNOPSIS
 
@@ -45,7 +45,7 @@ Examples:
     "{a}{b}[0,1,2,5]"     # 0, 1, 2 and 5 array's items
     "{a}{b}[0..2,5]"      # same, but using ranges
     "{a}{b}[9..0]"        # descending ranges allowed (perl doesn't)
-    "{a}{b}<{c}"          # step back (perl incompatible)
+    "{a}{b}<<{c}"         # step back (perl incompatible)
     "{a}{/regexp/}"       # regexp keys match
 
 =head1 SUBROUTINES
@@ -59,11 +59,12 @@ Parse perl-style string to L<Struct::Path|Struct::Path> path
 =cut
 
 our $OPERATORS = {
-    '<' => sub {
+    '<<' => sub { # step back
         pop @{$_[0]};
         pop @{$_[1]}
     },
 };
+$OPERATORS->{'<'} = $OPERATORS->{'<<'}; # deprecation cycle backward compatibility (since 0.41)
 
 sub ps_parse($) {
     my $path = shift;
@@ -123,6 +124,8 @@ sub ps_parse($) {
                 }
                 croak "Unfinished range secified (step #$sc)" if ($is_range);
             } elsif ($item->isa('PPI::Token::Operator') and exists $OPERATORS->{$item->content}) {
+                carp "Operator '<' is deprecated and will be reused in future releases for other" .
+                    " purposes. Use '<<' instead." if ($item->content eq '<');
                 push @{$out}, $OPERATORS->{$item->content};
             } else {
                 croak "Unsupported thing '" . $item->content . "' in the path (step #$sc)" ;

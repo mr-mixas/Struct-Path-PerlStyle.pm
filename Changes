@@ -1,5 +1,9 @@
 Revision history for Struct-Path-PerlStyle
 
+0.41    2016-12-06
+        '<' (step back) operator is deprecated ('<<' must be used instead)
+        tests improved
+
 0.40    2016-11-19
         regexp match for hash keys specification supported
 

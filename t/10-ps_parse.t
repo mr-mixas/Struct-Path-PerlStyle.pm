@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 use Struct::Path::PerlStyle qw(ps_parse);
-use Test::More tests => 32;
+use Test::More tests => 34;
 
 ### EXCEPTIONS ###
 
@@ -159,8 +159,23 @@ is_deeply(
 
 ### OPERATORS ###
 
+eval { ps_parse('[0]<=>[-2]') };
+like($@, qr/^Unsupported thing '<=>' in the path/, "Unsupported operator");
+
 is_deeply(
-    ps_parse('[0]<[-2]'),
-    [[0],$Struct::Path::PerlStyle::OPERATORS->{'<'},[-2]],
+    ps_parse('[0]<<[-2]'),
+    [[0],$Struct::Path::PerlStyle::OPERATORS->{'<<'},[-2]],
     "step back"
 );
+
+is_deeply(
+    ps_parse('[0]<<<<[-2]'),
+    [
+        [0],
+        $Struct::Path::PerlStyle::OPERATORS->{'<<'},
+        $Struct::Path::PerlStyle::OPERATORS->{'<<'},
+        [-2]
+    ],
+    "double step back"
+);
+
