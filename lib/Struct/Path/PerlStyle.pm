@@ -16,11 +16,11 @@ Struct::Path::PerlStyle - Perl-style syntax frontend for L<Struct::Path|Struct::
 
 =head1 VERSION
 
-Version 0.41
+Version 0.42
 
 =cut
 
-our $VERSION = '0.41';
+our $VERSION = '0.42';
 
 =head1 SYNOPSIS
 
@@ -41,7 +41,7 @@ Examples:
     "{a}{}"               # all values from a's subhash; same for arrays (using empty square brackets)
     "{a}{b,c}"            # b's and c's values
     "{a}{b c}"            # same, space is also a delimiter
-    "{a}{'space inside'}" # keys with spaces/tabs must be quoted (double quotes supported as well)
+    "{a}{'space inside'}" # key must be quoted unless it is a simple word (double quotes supported as well)
     "{a}{b}[0,1,2,5]"     # 0, 1, 2 and 5 array's items
     "{a}{b}[0..2,5]"      # same, but using ranges
     "{a}{b}[9..0]"        # descending ranges allowed (perl doesn't)
@@ -171,7 +171,7 @@ sub ps_serialize($) {
         } elsif (ref $step eq 'HASH') {
             my @items;
             if (keys %{$step} == 1 and exists $step->{keys} and ref $step->{keys} eq 'ARRAY' or not keys %{$step}) {
-                push @items, map { /\s/ ? "'$_'" : $_ } @{$step->{keys}}; # quote
+                push @items, map { /^\w+$/ ? $_ : "'$_'" } @{$step->{keys}}; # quote
             } else {
                 croak "Unsupported hash definition (step #$sc)";
             }

@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 21;
+use Test::More tests => 25;
 use Storable qw(freeze);
 
 $Storable::canonical = 1;
@@ -41,6 +41,9 @@ ok($@ =~ /^Unsupported hash definition \(step #0\)/);
 $str = ps_serialize([{keys => ['a']},{},{keys => ['c']}]);
 ok($str eq '{a}{}{c}');
 
+$str = ps_serialize([{keys => [""]},{keys => [" "]}]);
+is($str, "{''}{' '}", "Empty string and space as hash keys");
+
 # simple hash path
 $str = ps_serialize([{keys => ['a']},{keys => ['b']},{keys => ['c']}]);
 ok($str eq '{a}{b}{c}');
@@ -48,6 +51,9 @@ ok($str eq '{a}{b}{c}');
 # order specified hash path
 $str = ps_serialize([{keys => ['b','a']},{keys => ['c','d']}]);
 ok($str eq '{b,a}{c,d}');
+
+$str = ps_serialize([{keys => [0,2,100]},{keys => [5_000,4_000]}]);
+is($str, "{0,2,100}{5000,4000}", "Numbers as hash keys");
 
 # quotes for spaces
 my $path = [{keys => ['three   spaces']},{keys => ['two  spases']},{keys => ['one ']},{keys => ['none']}];
@@ -59,6 +65,12 @@ ok($frozen eq freeze($path)); # musst remain unchanged
 # quotes for tabs
 $str = ps_serialize([{keys => ['three			tabs']},{keys => ['two		tabs']},{keys => ['one	']},{keys => ['none']}]);
 ok($str eq "{'three			tabs'}{'two		tabs'}{'one	'}{none}");
+
+$str = ps_serialize([{keys => ['delimited:by:colons','some:more']},]);
+is($str, "{'delimited:by:colons','some:more'}", "Quotes for colons");
+
+$str = ps_serialize([{keys => ['/looks like regexp/','/another/']},]);
+is($str, "{'/looks like regexp/','/another/'}", "Quotes for regexp looking strings");
 
 ### ARRAYS ###
 
