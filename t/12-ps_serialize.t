@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 25;
+use Test::More tests => 26;
 use Storable qw(freeze);
 
 $Storable::canonical = 1;
@@ -35,6 +35,10 @@ ok($@ =~ /^Unsupported hash definition \(step #0\)/);
 eval { $str = ps_serialize([{keys => ['a'], garbage => ['b']}]) };
 ok($@ =~ /^Unsupported hash definition \(step #0\)/);
 
+# trash in hash definition #4
+eval { $str = ps_serialize([{keys => [undef]}]) };
+like($@, qr/Unsupported hash key type 'undef' \(step #0\)/);
+
 ### HASHES ###
 
 # empty hash path
@@ -60,7 +64,7 @@ my $path = [{keys => ['three   spaces']},{keys => ['two  spases']},{keys => ['on
 my $frozen = freeze($path);
 $str = ps_serialize($path);
 ok($str eq "{'three   spaces'}{'two  spases'}{'one '}{none}");
-ok($frozen eq freeze($path)); # musst remain unchanged
+ok($frozen eq freeze($path)); # must remain unchanged
 
 # quotes for tabs
 $str = ps_serialize([{keys => ['three			tabs']},{keys => ['two		tabs']},{keys => ['one	']},{keys => ['none']}]);

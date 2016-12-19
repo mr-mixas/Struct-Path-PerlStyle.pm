@@ -16,11 +16,11 @@ Struct::Path::PerlStyle - Perl-style syntax frontend for L<Struct::Path|Struct::
 
 =head1 VERSION
 
-Version 0.42
+Version 0.43
 
 =cut
 
-our $VERSION = '0.42';
+our $VERSION = '0.43';
 
 =head1 SYNOPSIS
 
@@ -171,7 +171,15 @@ sub ps_serialize($) {
         } elsif (ref $step eq 'HASH') {
             my @items;
             if (keys %{$step} == 1 and exists $step->{keys} and ref $step->{keys} eq 'ARRAY' or not keys %{$step}) {
-                push @items, map { /^\w+$/ ? $_ : "'$_'" } @{$step->{keys}}; # quote
+                for my $k (@{$step->{keys}}) {
+                    if (not defined $k) {
+                        croak "Unsupported hash key type 'undef' (step #$sc)";
+                    } elsif ($k =~ /^\w+$/) {
+                        push @items, $k;
+                    } else {
+                        push @items, "'$k'";
+                    }
+                }
             } else {
                 croak "Unsupported hash definition (step #$sc)";
             }
