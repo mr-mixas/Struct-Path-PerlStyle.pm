@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 26;
+use Test::More tests => 27;
 use Storable qw(freeze);
 
 $Storable::canonical = 1;
@@ -35,6 +35,10 @@ like($@, qr/^Unsupported hash definition \(step #0\)/);
 # trash in hash definition #4
 eval { $str = ps_serialize([{keys => [undef]}]) };
 like($@, qr/Unsupported hash key type 'undef' \(step #0\)/);
+
+# trash in hash definition #5
+eval { $str = ps_serialize([{keys => ['test',[]]}]) };
+like($@, qr/^Unsupported hash key type 'ARRAY' \(step #0\)/);
 
 ### HASHES ###
 

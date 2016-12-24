@@ -174,6 +174,8 @@ sub ps_serialize($) {
                 for my $k (@{$step->{keys}}) {
                     if (not defined $k) {
                         croak "Unsupported hash key type 'undef' (step #$sc)";
+                    } elsif (ref $k) {
+                        croak "Unsupported hash key type '" . (ref $k) . "' (step #$sc)";
                     } elsif ($k =~ /^\w+$/) {
                         push @items, $k;
                     } else {
