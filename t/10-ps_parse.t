@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 use Struct::Path::PerlStyle qw(ps_parse);
-use Test::More tests => 34;
+use Test::More tests => 36;
 
 ### EXCEPTIONS ###
 
@@ -99,6 +99,18 @@ is_deeply(
     ps_parse('{"a", "b"}{" c d"}'),
     [{keys => ['a','b']},{keys => [' c d']}],
     "double quotes"
+);
+
+is_deeply(
+    ps_parse("{'q\\'str\\'\\'','qq\"str\"'}"),
+    [{keys => ["q'str''",'qq"str"']}],
+    "escaped quotes"
+);
+
+is_deeply(
+    ps_parse('{"q\"str\"\"","qq\'str\'"}'),
+    [{keys => ['q"str""',"qq'str'"]}],
+    "escaped quotes 2"
 );
 
 is_deeply(

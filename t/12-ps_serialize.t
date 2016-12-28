@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 27;
+use Test::More tests => 28;
 use Storable qw(freeze);
 
 $Storable::canonical = 1;
@@ -71,6 +71,9 @@ is($str, "{'delimited:by:colons','some:more'}", "Quotes for colons");
 
 $str = ps_serialize([{keys => ['/looks like regexp/','/another/']},]);
 is($str, "{'/looks like regexp/','/another/'}", "Quotes for regexp looking strings");
+
+$str = ps_serialize([{keys => ["q'str'",'qq"str"']}]);
+is($str, "{'q\\'str\\'','qq\"str\"'}", "Escape quotations");
 
 ### ARRAYS ###
 

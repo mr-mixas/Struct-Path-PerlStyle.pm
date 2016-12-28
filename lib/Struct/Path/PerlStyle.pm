@@ -88,8 +88,11 @@ sub ps_parse($) {
                         $tmp->{keys} = $t->content;
                     } elsif ($t->isa('PPI::Token::Operator') and $t->content eq ',') {
                         next;
-                    } elsif ($t->isa('PPI::Token::Quote')) {
-                        $tmp->{keys} = substr(substr($t->content, 1), 0, -1);
+                    } elsif ($t->isa('PPI::Token::Quote::Single')) {
+                        $tmp->{keys} = $t->literal;
+                    } elsif ($t->isa('PPI::Token::Quote::Double')) {
+                        $tmp->{keys} = $t->string;
+                        $tmp->{keys} =~ s/\\"/"/g;
                     } elsif ($t->isa('PPI::Token::Regexp::Match')) {
                         $tmp->{regs} = substr(substr($t->content, 1), 0, -1); # get rid of slashes
                         $tmp->{regs} = qr($tmp->{regs});
@@ -179,7 +182,7 @@ sub ps_serialize($) {
                     } elsif ($k =~ /^\w+$/) {
                         push @items, $k;
                     } else {
-                        push @items, "'$k'";
+                        push @items, map { $_ =~ s/'/\\'/g; "'$_'" } $k; # quote
                     }
                 }
             } else {
