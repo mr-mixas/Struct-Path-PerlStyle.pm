@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 use Struct::Path::PerlStyle qw(ps_parse);
-use Test::More tests => 36;
+use Test::More tests => 38;
 
 ### EXCEPTIONS ###
 
@@ -129,6 +129,18 @@ is_deeply(
     ps_parse('{"a", "b"}{/^abc[d..g]/,/another/}'),
     [{keys => ['a','b']},{regs => [qr/^abc[d..g]/,qr/another/]}],
     "more than one regexp"
+);
+
+# unquoted utf8 for hash key doesn't supported yet =(
+# https://github.com/adamkennedy/PPI/issues/168#issuecomment-180506979
+eval { ps_parse('{кириллица}'), };
+like($@, qr/Failed to parse passed path/, "can't parse unquoted utf8 hash keys");
+
+# quoted - ok
+is_deeply(
+    ps_parse('{"кириллица"}'),
+    [{keys => ['кириллица']}],
+    "utf8 strings"
 );
 
 ### ARRAYS ###

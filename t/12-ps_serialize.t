@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 28;
+use Test::More tests => 29;
 use Storable qw(freeze);
 
 $Storable::canonical = 1;
@@ -74,6 +74,9 @@ is($str, "{'/looks like regexp/','/another/'}", "Quotes for regexp looking strin
 
 $str = ps_serialize([{keys => ["q'str'",'qq"str"']}]);
 is($str, "{'q\\'str\\'','qq\"str\"'}", "Escape quotations");
+
+$str = ps_serialize([{keys => ['кириллица']}]);
+is($str, "{'кириллица'}", "non ASCII characters must be quoted");
 
 ### ARRAYS ###
 

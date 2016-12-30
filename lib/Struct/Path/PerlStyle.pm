@@ -179,7 +179,9 @@ sub ps_serialize($) {
                         croak "Unsupported hash key type 'undef' (step #$sc)";
                     } elsif (ref $k) {
                         croak "Unsupported hash key type '" . (ref $k) . "' (step #$sc)";
-                    } elsif ($k =~ /^\w+$/) {
+                    } elsif ($k =~ /^\w+$/a) {
+                        # /a modifier above -- PPI can't parse unquoted utf8 hash keys
+                        # https://github.com/adamkennedy/PPI/issues/168#issuecomment-180506979
                         push @items, $k;
                     } else {
                         push @items, map { $_ =~ s/'/\\'/g; "'$_'" } $k; # quote
