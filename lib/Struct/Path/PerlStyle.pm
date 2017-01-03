@@ -10,6 +10,8 @@ use Scalar::Util qw(looks_like_number);
 
 our @EXPORT_OK = qw(ps_parse ps_serialize);
 
+=encoding utf8
+
 =head1 NAME
 
 Struct::Path::PerlStyle - Perl-style syntax frontend for L<Struct::Path|Struct::Path>.
@@ -42,6 +44,7 @@ Examples:
     "{a}{b,c}"            # b's and c's values
     "{a}{b c}"            # same, space is also a delimiter
     "{a}{'space inside'}" # key must be quoted unless it is a simple word (double quotes supported as well)
+    "{a}{'π'}"            # non ASCII keys also must be quoted
     "{a}{b}[0,1,2,5]"     # 0, 1, 2 and 5 array's items
     "{a}{b}[0..2,5]"      # same, but using ranges
     "{a}{b}[9..0]"        # descending ranges allowed (perl doesn't)
@@ -179,8 +182,8 @@ sub ps_serialize($) {
                         croak "Unsupported hash key type 'undef' (step #$sc)";
                     } elsif (ref $k) {
                         croak "Unsupported hash key type '" . (ref $k) . "' (step #$sc)";
-                    } elsif ($k =~ /^\w+$/a) {
-                        # /a modifier above -- PPI can't parse unquoted utf8 hash keys
+                    } elsif ($k =~ /^[0-9a-zA-Z_]+$/) {
+                        # \w doesn't fit -- PPI can't parse unquoted utf8 hash keys
                         # https://github.com/adamkennedy/PPI/issues/168#issuecomment-180506979
                         push @items, $k;
                     } else {
@@ -244,7 +247,7 @@ L<Struct::Path>, L<Struct::Diff>, L<perldata>
 
 =head1 LICENSE AND COPYRIGHT
 
-Copyright 2016 Michael Samoglyadov.
+Copyright 2016,2017 Michael Samoglyadov.
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of either: the GNU General Public License as published

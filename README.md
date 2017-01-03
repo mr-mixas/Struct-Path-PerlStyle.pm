@@ -26,6 +26,7 @@ Examples:
     "{a}{b,c}"            # b's and c's values
     "{a}{b c}"            # same, space is also a delimiter
     "{a}{'space inside'}" # key must be quoted unless it is a simple word (double quotes supported as well)
+    "{a}{'π'}"            # non ASCII keys also must be quoted
     "{a}{b}[0,1,2,5]"     # 0, 1, 2 and 5 array's items
     "{a}{b}[0..2,5]"      # same, but using ranges
     "{a}{b}[9..0]"        # descending ranges allowed (perl doesn't)
@@ -86,7 +87,7 @@ You can also look for information at:
 
 # LICENSE AND COPYRIGHT
 
-Copyright 2016 Michael Samoglyadov.
+Copyright 2016,2017 Michael Samoglyadov.
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of either: the GNU General Public License as published
