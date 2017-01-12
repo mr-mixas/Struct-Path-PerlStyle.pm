@@ -46,7 +46,7 @@ $str = ps_serialize([{keys => ['a']},{},{keys => ['c']}]);
 is($str, '{a}{}{c}', "empty hash path");
 
 $str = ps_serialize([{keys => [""]},{keys => [" "]}]);
-is($str, "{''}{' '}", "Empty string and space as hash keys");
+is($str, '{""}{" "}', "Empty string and space as hash keys");
 
 $str = ps_serialize([{keys => ['a']},{keys => ['b']},{keys => ['c']}]);
 is($str, '{a}{b}{c}', "simple hash path");
@@ -60,23 +60,23 @@ is($str, "{0,2,100}{5000,4000}", "Numbers as hash keys");
 my $path = [{keys => ['three   spaces']},{keys => ['two  spases']},{keys => ['one ']},{keys => ['none']}];
 my $frozen = freeze($path);
 $str = ps_serialize($path);
-is($str, "{'three   spaces'}{'two  spases'}{'one '}{none}", "quotes for spaces");
+is($str, '{"three   spaces"}{"two  spases"}{"one "}{none}', "Quotes for spaces");
 is($frozen, freeze($path), "must remain unchanged");
 
 $str = ps_serialize([{keys => ['three			tabs']},{keys => ['two		tabs']},{keys => ['one	']},{keys => ['none']}]);
-is($str, "{'three			tabs'}{'two		tabs'}{'one	'}{none}", "quotes for tabs");
+is($str, '{"three\t\t\ttabs"}{"two\t\ttabs"}{"one\t"}{none}', "Quotes and escapes for tabs");
 
 $str = ps_serialize([{keys => ['delimited:by:colons','some:more']},]);
-is($str, "{'delimited:by:colons','some:more'}", "Quotes for colons");
+is($str, '{"delimited:by:colons","some:more"}', "Quotes for colons");
 
-$str = ps_serialize([{keys => ['/looks like regexp/','/another/']},]);
-is($str, "{'/looks like regexp/','/another/'}", "Quotes for regexp looking strings");
+$str = ps_serialize([{keys => ['/looks like regexp, but string/','/another/']},]);
+is($str, '{"/looks like regexp, but string/","/another/"}', "Quotes for regexp looking strings");
 
-$str = ps_serialize([{keys => ["q'str'",'qq"str"']}]);
-is($str, "{'q\\'str\\'','qq\"str\"'}", "Escape quotations");
+$str = ps_serialize([{keys => ['"','""', "'", "''", "\n", "\t"]}]);
+is($str, '{"\"","\"\"","\'","\'\'","\n","\t"}', "Escaping");
 
 $str = ps_serialize([{keys => ['кириллица']}]);
-is($str, "{'кириллица'}", "non ASCII characters must be quoted");
+is($str, '{"кириллица"}', "non ASCII characters must be quoted even it's a bareword");
 
 ### ARRAYS ###
 

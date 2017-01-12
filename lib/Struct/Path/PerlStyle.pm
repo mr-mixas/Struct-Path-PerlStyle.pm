@@ -18,18 +18,18 @@ Struct::Path::PerlStyle - Perl-style syntax frontend for L<Struct::Path|Struct::
 
 =head1 VERSION
 
-Version 0.43
+Version 0.44
 
 =cut
 
-our $VERSION = '0.43';
+our $VERSION = '0.44';
 
 =head1 SYNOPSIS
 
     use Struct::Path::PerlStyle qw(ps_parse ps_serialize);
 
-    $struct = ps_parse('{a}{b}[1]');    # Struct::Path compatible
-    $string = ps_serialize($struct);    # convert Struct::Path path to string
+    $struct = ps_parse('{a}{b}[1]');    # string to Struct::Path path
+    $string = ps_serialize($struct);    # Struct::Path path to string
 
 =head1 EXPORT
 
@@ -39,17 +39,20 @@ Nothing is exported by default.
 
 Examples:
 
-    "{a}{b}"              # means b's value
-    "{a}{}"               # all values from a's subhash; same for arrays (using empty square brackets)
-    "{a}{b,c}"            # b's and c's values
-    "{a}{b c}"            # same, space is also a delimiter
-    "{a}{'space inside'}" # key must be quoted unless it is a simple word (double quotes supported as well)
-    "{a}{'π'}"            # non ASCII keys also must be quoted
-    "{a}{b}[0,1,2,5]"     # 0, 1, 2 and 5 array's items
-    "{a}{b}[0..2,5]"      # same, but using ranges
-    "{a}{b}[9..0]"        # descending ranges allowed (perl doesn't)
-    "{a}{b}<<{c}"         # step back (perl incompatible)
-    "{a}{/regexp/}"       # regexp keys match
+    '{a}{b}'              # points to b's value
+    '{a}{}'               # all values from a's subhash; same for arrays (using empty square brackets)
+    '{a}{b,c}'            # b's and c's values
+    '{a}{b c}'            # same, space also is a delimiter
+    '{a}{"space inside"}' # key must be quoted unless it is a simple word (single quotes supported as well)
+    '{a}{"multi\nline"}'  # same for special characters (if double quoted)
+    '{a}{"π"}'            # keys containing non ASCII characters also must be quoted*
+    '{a}{b}[0,1,2,5]'     # 0, 1, 2 and 5 array's items
+    '{a}{b}[0..2,5]'      # same, but using ranges
+    '{a}{b}[9..0]'        # descending ranges allowed (perl doesn't)
+    '{a}{b}<<{c}'         # step back (perl incompatible)
+    '{a}{/regexp/}'       # regexp keys match
+
+    * at least until https://github.com/adamkennedy/PPI/issues/168
 
 =head1 SUBROUTINES
 
@@ -151,6 +154,18 @@ Serialize L<Struct::Path|Struct::Path> path to perl-style string
 
 =cut
 
+my %esc = (
+    '"'  => '\"',
+    "\a" => '\a',
+    "\b" => '\b',
+    "\t" => '\t',
+    "\n" => '\n',
+    "\f" => '\f',
+    "\r" => '\r',
+    "\e" => '\e',
+);
+my $esc = join('', keys %esc);
+
 sub ps_serialize($) {
     my $path = shift;
     croak "Path must be an arrayref" unless (ref $path eq 'ARRAY');
@@ -187,7 +202,7 @@ sub ps_serialize($) {
                         # https://github.com/adamkennedy/PPI/issues/168#issuecomment-180506979
                         push @items, $k;
                     } else {
-                        push @items, map { $_ =~ s/'/\\'/g; "'$_'" } $k; # quote
+                        push @items, map { $_ =~ s/([\\$esc])/$esc{$1}/g; qq("$_"); } $k; # escape and quote
                     }
                 }
             } else {
@@ -243,7 +258,7 @@ L<http://search.cpan.org/dist/Struct-Path-PerlStyle/>
 
 =head1 SEE ALSO
 
-L<Struct::Path>, L<Struct::Diff>, L<perldata>
+L<Struct::Path>, L<Struct::Diff>, L<perldsc>, L<perldata>
 
 =head1 LICENSE AND COPYRIGHT
 

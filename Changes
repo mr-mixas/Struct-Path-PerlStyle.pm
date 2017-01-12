@@ -1,5 +1,10 @@
 Revision history for Struct-Path-PerlStyle
 
+0.44    2017-01-12
+        double quotes used in ps_serialize()
+        escape control characters in ps_serialize() (\t,\n,\b and so on)
+        pod corrected
+
 0.43    2017-01-03
         quote non ASCII keys in ps_serialize()
         escape/unescape quoting characters
