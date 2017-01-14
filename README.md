@@ -4,7 +4,7 @@ Struct::Path::PerlStyle - Perl-style syntax frontend for [Struct::Path](https://
 
 # VERSION
 
-Version 0.44
+Version 0.50
 
 # SYNOPSIS
 
@@ -28,11 +28,11 @@ Examples:
     '{a}{"space inside"}' # key must be quoted unless it is a simple word (single quotes supported as well)
     '{a}{"multi\nline"}'  # same for special characters (if double quoted)
     '{a}{"π"}'            # keys containing non ASCII characters also must be quoted*
+    '{a}{/regexp/}'       # regexp keys match
     '{a}{b}[0,1,2,5]'     # 0, 1, 2 and 5 array's items
     '{a}{b}[0..2,5]'      # same, but using ranges
     '{a}{b}[9..0]'        # descending ranges allowed (perl doesn't)
-    '{a}{b}<<{c}'         # step back (perl incompatible)
-    '{a}{/regexp/}'       # regexp keys match
+    '{a}{b}(<<){c}'       # operators supported (perl incompatible)
 
     * at least until https://github.com/adamkennedy/PPI/issues/168
 

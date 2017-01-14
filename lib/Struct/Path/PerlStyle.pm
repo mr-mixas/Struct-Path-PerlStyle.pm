@@ -18,11 +18,11 @@ Struct::Path::PerlStyle - Perl-style syntax frontend for L<Struct::Path|Struct::
 
 =head1 VERSION
 
-Version 0.44
+Version 0.50
 
 =cut
 
-our $VERSION = '0.44';
+our $VERSION = '0.50';
 
 =head1 SYNOPSIS
 
@@ -46,11 +46,11 @@ Examples:
     '{a}{"space inside"}' # key must be quoted unless it is a simple word (single quotes supported as well)
     '{a}{"multi\nline"}'  # same for special characters (if double quoted)
     '{a}{"π"}'            # keys containing non ASCII characters also must be quoted*
+    '{a}{/regexp/}'       # regexp keys match
     '{a}{b}[0,1,2,5]'     # 0, 1, 2 and 5 array's items
     '{a}{b}[0..2,5]'      # same, but using ranges
     '{a}{b}[9..0]'        # descending ranges allowed (perl doesn't)
-    '{a}{b}<<{c}'         # step back (perl incompatible)
-    '{a}{/regexp/}'       # regexp keys match
+    '{a}{b}(<<){c}'       # operators supported (perl incompatible)
 
     * at least until https://github.com/adamkennedy/PPI/issues/168
 
@@ -136,6 +136,16 @@ sub ps_parse($) {
                 carp "Operator '<' is deprecated and will be reused in future releases for other" .
                     " purposes. Use '<<' instead." if ($item->content eq '<');
                 push @{$out}, $OPERATORS->{$item->content};
+            } elsif ($item->isa('PPI::Structure::List')) {
+                for my $t (map { $_->elements } $item->children) {
+                    if ($t->isa('PPI::Token::Operator')) {
+                        croak "Unsupported operator '" . $t->content . "' specified (step #$sc)"
+                            unless (exists $OPERATORS->{$t->content});
+                        push @{$out}, $OPERATORS->{$t->content};
+                    } else {
+                        croak "Unsupported thing '" . $t->content . "' as operator (step #$sc)";
+                    }
+                }
             } else {
                 croak "Unsupported thing '" . $item->content . "' in the path (step #$sc)" ;
             }

@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 use Struct::Path::PerlStyle qw(ps_parse);
-use Test::More tests => 38;
+use Test::More tests => 42;
 
 ### EXCEPTIONS ###
 
@@ -26,7 +26,7 @@ eval { ps_parse('[0}') };
 like($@, qr/^Unsupported thing '}' in the path/, "unmatched brackets2");
 
 eval { ps_parse('(0)') };
-like($@, qr/^Unsupported thing '\(0\)' in the path/, "parenthesis in the path");
+like($@, qr/^Unsupported thing '0' as operator/, "parenthesis in the path");
 
 eval { ps_parse('[[0]]') };
 like($@, qr/^Unsupported thing '\[0\]' in array item specification/, "garbage: nested steps");
@@ -203,3 +203,35 @@ is_deeply(
     "double step back"
 );
 
+# operators with parenthesis
+
+eval { ps_parse('[0](=>)[-2]') };
+like($@, qr/^Unsupported operator '=>' specified/, "Unsupported operator");
+
+is_deeply(
+    ps_parse('[0](<<)[-2]'),
+    [[0],$Struct::Path::PerlStyle::OPERATORS->{'<<'},[-2]],
+    "step back"
+);
+
+is_deeply(
+    ps_parse('[0](<<)(<<)[-2]'),
+    [
+        [0],
+        $Struct::Path::PerlStyle::OPERATORS->{'<<'},
+        $Struct::Path::PerlStyle::OPERATORS->{'<<'},
+        [-2]
+    ],
+    "double step back"
+);
+
+is_deeply(
+    ps_parse('[0](<<<<)[-2]'),
+    [
+        [0],
+        $Struct::Path::PerlStyle::OPERATORS->{'<<'},
+        $Struct::Path::PerlStyle::OPERATORS->{'<<'},
+        [-2]
+    ],
+    "operators may be grouped together"
+);
