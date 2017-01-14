@@ -4,7 +4,7 @@ use 5.006;
 use strict;
 use warnings FATAL => 'all';
 use parent qw(Exporter);
-use Carp qw(carp croak);
+use Carp qw(croak);
 use PPI::Lexer qw();
 use Scalar::Util qw(looks_like_number);
 
@@ -70,7 +70,6 @@ our $OPERATORS = {
         pop @{$_[1]}
     },
 };
-$OPERATORS->{'<'} = $OPERATORS->{'<<'}; # deprecation cycle backward compatibility (since 0.41)
 
 sub ps_parse($) {
     my $path = shift;
@@ -133,8 +132,6 @@ sub ps_parse($) {
                 }
                 croak "Unfinished range secified (step #$sc)" if ($is_range);
             } elsif ($item->isa('PPI::Token::Operator') and exists $OPERATORS->{$item->content}) {
-                carp "Operator '<' is deprecated and will be reused in future releases for other" .
-                    " purposes. Use '<<' instead." if ($item->content eq '<');
                 push @{$out}, $OPERATORS->{$item->content};
             } elsif ($item->isa('PPI::Structure::List')) {
                 for my $t (map { $_->elements } $item->children) {
