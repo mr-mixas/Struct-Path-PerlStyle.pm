@@ -1,5 +1,11 @@
 Revision history for Struct-Path-PerlStyle
 
+0.60    2017-01-22
+        no backwards compatibility for filters (operators): should be in
+            parentheis now (filters still is highly experimental future)
+        filters now may have arguments
+        'eq', 'defined' and 'not' filters added
+
 0.44    2017-01-12
         double quotes used in ps_serialize()
         escape control characters in ps_serialize() (\t,\n,\b and so on)

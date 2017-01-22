@@ -4,7 +4,7 @@ Struct::Path::PerlStyle - Perl-style syntax frontend for [Struct::Path](https://
 
 # VERSION
 
-Version 0.50
+Version 0.60
 
 # SYNOPSIS
 
@@ -32,7 +32,7 @@ Examples:
     '{a}{b}[0,1,2,5]'     # 0, 1, 2 and 5 array's items
     '{a}{b}[0..2,5]'      # same, but using ranges
     '{a}{b}[9..0]'        # descending ranges allowed (perl doesn't)
-    '{a}{b}(<<){c}'       # operators supported (perl incompatible)
+    '{a}{b}(<<){c}'       # step back (to previous level)
 
     * at least until https://github.com/adamkennedy/PPI/issues/168
 

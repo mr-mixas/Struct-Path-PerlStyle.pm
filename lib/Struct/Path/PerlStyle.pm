@@ -18,11 +18,11 @@ Struct::Path::PerlStyle - Perl-style syntax frontend for L<Struct::Path|Struct::
 
 =head1 VERSION
 
-Version 0.50
+Version 0.60
 
 =cut
 
-our $VERSION = '0.50';
+our $VERSION = '0.60';
 
 =head1 SYNOPSIS
 
@@ -50,7 +50,7 @@ Examples:
     '{a}{b}[0,1,2,5]'     # 0, 1, 2 and 5 array's items
     '{a}{b}[0..2,5]'      # same, but using ranges
     '{a}{b}[9..0]'        # descending ranges allowed (perl doesn't)
-    '{a}{b}(<<){c}'       # operators supported (perl incompatible)
+    '{a}{b}(<<){c}'       # step back (to previous level)
 
     * at least until https://github.com/adamkennedy/PPI/issues/168
 
@@ -64,12 +64,33 @@ Parse perl-style string to L<Struct::Path|Struct::Path> path
 
 =cut
 
-our $OPERATORS = {
-    '<<' => sub { # step back
-        pop @{$_[0]};
-        pop @{$_[1]}
+our $FILTERS = {
+    '<<' => sub { # step back $count times
+        my $count = defined $_[0] ? $_[0] : 1;
+        return sub {
+            while ($count) {
+                croak "Can't step back (root of the structure)"
+                    unless (@{$_[0]} and @{$_[1]});
+                pop @{$_[0]};
+                pop @{$_[1]};
+                $count--;
+            }
+            return 1;
+        };
+    },
+    'defined' => sub {
+        croak "no args accepted by 'defined'" if (@_);
+        return sub { return defined (${$_[1]->[-1]}) ? 1 : 0 }
+    },
+    'eq' => sub {
+        croak "Only one arg accepted by 'eq'" if (@_ != 1);
+        my $arg = shift;
+        return sub {
+            return ${$_[1]->[-1]} eq $arg ? 1 : 0;
+        };
     },
 };
+
 
 sub ps_parse($) {
     my $path = shift;
@@ -131,18 +152,28 @@ sub ps_parse($) {
                     }
                 }
                 croak "Unfinished range secified (step #$sc)" if ($is_range);
-            } elsif ($item->isa('PPI::Token::Operator') and exists $OPERATORS->{$item->content}) {
-                push @{$out}, $OPERATORS->{$item->content};
             } elsif ($item->isa('PPI::Structure::List')) {
-                for my $t (map { $_->elements } $item->children) {
-                    if ($t->isa('PPI::Token::Operator')) {
-                        croak "Unsupported operator '" . $t->content . "' specified (step #$sc)"
-                            unless (exists $OPERATORS->{$t->content});
-                        push @{$out}, $OPERATORS->{$t->content};
-                    } else {
-                        croak "Unsupported thing '" . $t->content . "' as operator (step #$sc)";
-                    }
+                my ($flt, @args) = map { $_->elements } $item->children;
+                my $neg;
+                if ($flt->content eq 'not' or $flt->content eq '!') {
+                    $neg = $flt->content;
+                    $flt = shift @args;
                 }
+                croak "Unsupported thing '" . $flt->content . "' as operator (step #$sc)"
+                    unless ($flt->isa('PPI::Token::Operator') or $flt->isa('PPI::Token::Word'));
+                croak "Unsupported operator '" . $flt->content . "' specified (step #$sc)"
+                    unless (exists $FILTERS->{$flt->content});
+                @args = map {
+                    if ($_->isa('PPI::Token::Quote::Single') or $_->isa('PPI::Token::Number')) {
+                        $_->literal;
+                    } elsif ($_->isa('PPI::Token::Quote::Double')) {
+                        $_->string;
+                    } else {
+                        croak "Unsupported thing '" . $_->content . "' as operator argument (step #$sc)"
+                    }
+                } @args;
+                $flt = $FILTERS->{$flt->content}->(@args); # closure with saved args
+                push @{$out}, ($neg ? sub { not $flt->(@_) } : $flt);
             } else {
                 croak "Unsupported thing '" . $item->content . "' in the path (step #$sc)" ;
             }

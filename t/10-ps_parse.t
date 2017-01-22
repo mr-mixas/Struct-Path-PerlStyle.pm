@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 use Struct::Path::PerlStyle qw(ps_parse);
-use Test::More tests => 42;
+use Test::More tests => 35;
 
 ### EXCEPTIONS ###
 
@@ -179,59 +179,4 @@ is_deeply(
     ps_parse('[0][-1][-2]'),
     [[0],[-1],[-2]],
     "negative indexes"
-);
-
-### OPERATORS ###
-
-eval { ps_parse('[0]<=>[-2]') };
-like($@, qr/^Unsupported thing '<=>' in the path/, "Unsupported operator");
-
-is_deeply(
-    ps_parse('[0]<<[-2]'),
-    [[0],$Struct::Path::PerlStyle::OPERATORS->{'<<'},[-2]],
-    "step back"
-);
-
-is_deeply(
-    ps_parse('[0]<<<<[-2]'),
-    [
-        [0],
-        $Struct::Path::PerlStyle::OPERATORS->{'<<'},
-        $Struct::Path::PerlStyle::OPERATORS->{'<<'},
-        [-2]
-    ],
-    "double step back"
-);
-
-# operators with parenthesis
-
-eval { ps_parse('[0](=>)[-2]') };
-like($@, qr/^Unsupported operator '=>' specified/, "Unsupported operator");
-
-is_deeply(
-    ps_parse('[0](<<)[-2]'),
-    [[0],$Struct::Path::PerlStyle::OPERATORS->{'<<'},[-2]],
-    "step back"
-);
-
-is_deeply(
-    ps_parse('[0](<<)(<<)[-2]'),
-    [
-        [0],
-        $Struct::Path::PerlStyle::OPERATORS->{'<<'},
-        $Struct::Path::PerlStyle::OPERATORS->{'<<'},
-        [-2]
-    ],
-    "double step back"
-);
-
-is_deeply(
-    ps_parse('[0](<<<<)[-2]'),
-    [
-        [0],
-        $Struct::Path::PerlStyle::OPERATORS->{'<<'},
-        $Struct::Path::PerlStyle::OPERATORS->{'<<'},
-        [-2]
-    ],
-    "operators may be grouped together"
 );

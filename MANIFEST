@@ -6,6 +6,7 @@ README
 t/00-load.t
 t/10-ps_parse.t
 t/12-ps_serialize.t
+t/14-filters.t
 t/manifest.t
 t/pod-coverage.t
 t/pod.t
