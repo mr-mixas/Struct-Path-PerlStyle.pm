@@ -86,7 +86,7 @@ our $FILTERS = {
         croak "Only one arg accepted by 'eq'" if (@_ != 1);
         my $arg = shift;
         return sub {
-            return ${$_[1]->[-1]} eq $arg ? 1 : 0;
+            return (defined ${$_[1]->[-1]} and ${$_[1]->[-1]} eq $arg) ? 1 : 0;
         };
     },
 };

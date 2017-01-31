@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 use Struct::Path::PerlStyle qw(ps_parse);
-use Test::More tests => 16;
+use Test::More tests => 17;
 
 eval { ps_parse('[0](=>)[-2]') };
 like($@, qr/^Unsupported operator '=>' specified/, "Unsupported operator");
@@ -84,6 +84,11 @@ ok(
 $args = [ [[1]], [\undef] ];
 
 ok(
+    ps_parse("(not eq 'b')")->[0]->($args->[0], $args->[1]),
+    "eq must correctly handle undefs"
+);
+
+ok(
     ! ps_parse('(defined)')->[0]->($args->[0], $args->[1]),
     "'defined' must return false value"
 );
@@ -97,6 +102,7 @@ ok(
     ps_parse("(! defined)")->[0]->($args->[0], $args->[1]),
     "negate defined's false value"
 );
+
 ok(
     ps_parse("(!defined)")->[0]->($args->[0], $args->[1]),
     "negate defined's false value"
