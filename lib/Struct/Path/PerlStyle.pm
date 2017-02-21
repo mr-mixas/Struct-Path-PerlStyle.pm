@@ -18,11 +18,11 @@ Struct::Path::PerlStyle - Perl-style syntax frontend for L<Struct::Path|Struct::
 
 =head1 VERSION
 
-Version 0.60
+Version 0.61
 
 =cut
 
-our $VERSION = '0.60';
+our $VERSION = '0.61';
 
 =head1 SYNOPSIS
 
@@ -66,8 +66,9 @@ Parse perl-style string to L<Struct::Path|Struct::Path> path
 
 our $FILTERS = {
     '<<' => sub { # step back $count times
-        my $count = defined $_[0] ? $_[0] : 1;
+        my $static = defined $_[0] ? $_[0] : 1;
         return sub {
+            my $count = $static; # keep arg (reusable closure)
             while ($count) {
                 croak "Can't step back (root of the structure)"
                     unless (@{$_[0]} and @{$_[1]});
@@ -90,7 +91,6 @@ our $FILTERS = {
         };
     },
 };
-
 
 sub ps_parse($) {
     my $path = shift;

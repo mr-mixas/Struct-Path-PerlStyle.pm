@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 use Struct::Path::PerlStyle qw(ps_parse);
-use Test::More tests => 17;
+use Test::More tests => 18;
 
 eval { ps_parse('[0](=>)[-2]') };
 like($@, qr/^Unsupported operator '=>' specified/, "Unsupported operator");
@@ -36,8 +36,9 @@ $args = [
     ["a","b"],
 ];
 
+my $spath = ps_parse('[0](<<2)');
 ok(
-    ps_parse('[0](<<2)')->[1]->($args->[0], $args->[1]),
+    $spath->[1]->($args->[0], $args->[1]),
     "Step back must returns 1"
 );
 
@@ -45,6 +46,18 @@ is_deeply(
     $args,
     [[], []],
     "Two steps back"
+);
+
+$args = [
+    [[0],[1]],
+    ["a","b"],
+];
+
+$spath->[1]->($args->[0], $args->[1]); # use this closure again
+is_deeply(
+    $args,
+    [[], []],
+    "Step back: closure must be reusable (keep arg untouched)"
 );
 
 $args = [
