@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 use Struct::Path::PerlStyle qw(ps_parse);
-use Test::More tests => 35;
+use Test::More tests => 36;
 
 ### EXCEPTIONS ###
 
@@ -19,11 +19,14 @@ like($@, qr/^Unsupported thing ',' in the path/, "garbage between path elements"
 eval { ps_parse('{a} []') };
 like($@, qr/^Unsupported thing ' ' in the path/, "space between path elements");
 
-eval { ps_parse('{a][0}') };
-like($@, qr/^Unsupported thing ']' in the path/, "unmatched brackets");
-
 eval { ps_parse('[0}') };
-like($@, qr/^Unsupported thing '}' in the path/, "unmatched brackets2");
+like($@, qr/^Unsupported thing '\[0' in the path/, "unmatched brackets");
+
+eval { ps_parse('{a') };
+like($@, qr/^Unsupported thing '{a' in the path/, "unclosed curly brackets");
+
+eval { ps_parse('[0') };
+like($@, qr/^Unsupported thing '\[0' in the path/, "unclosed square brackets");
 
 eval { ps_parse('(0)') };
 like($@, qr/^Unsupported thing '0' as operator/, "parenthesis in the path");

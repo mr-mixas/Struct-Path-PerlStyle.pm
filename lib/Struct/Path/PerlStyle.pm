@@ -18,11 +18,11 @@ Struct::Path::PerlStyle - Perl-style syntax frontend for L<Struct::Path|Struct::
 
 =head1 VERSION
 
-Version 0.61
+Version 0.62
 
 =cut
 
-our $VERSION = '0.61';
+our $VERSION = '0.62';
 
 =head1 SYNOPSIS
 
@@ -105,8 +105,7 @@ sub ps_parse($) {
         for my $item ($step->elements) {
             $item->prune('PPI::Token::Whitespace') if $item->can('prune');
 
-            if ($item->isa('PPI::Structure::Constructor') and $item->first_token->content eq '{' or
-                $item->isa('PPI::Structure::Block')) {
+            if ($item->isa('PPI::Structure') and $item->start->content eq '{' and $item->finish) {
                 push @{$out}, {};
                 for my $t (map { $_->elements } $item->children) {
                     my $tmp;
@@ -127,7 +126,7 @@ sub ps_parse($) {
                     }
                     map { push @{$out->[-1]->{$_}}, delete $tmp->{$_} } keys %{$tmp};
                 }
-            } elsif ($item->isa('PPI::Structure::Constructor')) { # PPI::Structure::Constructor is hash/array constructir only
+            } elsif ($item->isa('PPI::Structure') and $item->start->content eq '[' and $item->finish) {
                 push @{$out}, [];
                 my $is_range;
                 for my $t (map { $_->elements } $item->children) {
@@ -152,7 +151,7 @@ sub ps_parse($) {
                     }
                 }
                 croak "Unfinished range secified (step #$sc)" if ($is_range);
-            } elsif ($item->isa('PPI::Structure::List')) {
+            } elsif ($item->isa('PPI::Structure') and $item->start->content eq '(' and $item->finish) {
                 my ($flt, @args) = map { $_->elements } $item->children;
                 my $neg;
                 if ($flt->content eq 'not' or $flt->content eq '!') {

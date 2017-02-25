@@ -3,7 +3,13 @@
 use strict;
 use warnings;
 use Struct::Path::PerlStyle qw(ps_parse);
-use Test::More tests => 18;
+use Test::More tests => 20;
+
+eval { ps_parse('(<<') };
+like($@, qr/^Unsupported thing '\(<<' in the path/, "Unclosed parenthesis");
+
+eval { ps_parse('(<<}') };
+like($@, qr/^Unsupported thing '\(<<' in the path/, "Unmatched brackets");
 
 eval { ps_parse('[0](=>)[-2]') };
 like($@, qr/^Unsupported operator '=>' specified/, "Unsupported operator");
