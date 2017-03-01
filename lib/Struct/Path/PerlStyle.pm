@@ -79,6 +79,13 @@ our $FILTERS = {
             return 1;
         };
     },
+    '=~' => sub {
+        croak "Only one arg accepted by '=~'" if (@_ != 1);
+        my $arg = shift;
+        return sub {
+            return (defined ${$_[1]->[-1]} and ${$_[1]->[-1]} =~ $arg) ? 1 : 0;
+        }
+    },
     'defined' => sub {
         croak "no args accepted by 'defined'" if (@_);
         return sub { return defined (${$_[1]->[-1]}) ? 1 : 0 }

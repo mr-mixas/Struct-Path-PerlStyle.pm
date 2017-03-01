@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 use Struct::Path::PerlStyle qw(ps_parse);
-use Test::More tests => 20;
+use Test::More tests => 24;
 
 eval { ps_parse('(<<') };
 like($@, qr/^Unsupported thing '\(<<' in the path/, "Unclosed parenthesis");
@@ -77,6 +77,35 @@ like(
     "Must fail if backs steps more than current path length"
 );
 
+### regexp match
+
+$args = [
+    [[0],[1]],
+    [\"foo",\"bar"],
+];
+
+eval { ps_parse("[0][1](=~ 'foo' 'bar')")->[2]->($args->[0], $args->[1]) };
+like($@, qr/^Only one arg accepted by '=~'/, "As is");
+
+ok(
+    ps_parse("[0][1](=~ 'ar')")->[2]->($args->[0], $args->[1]),
+    "eq must return true value here"
+);
+
+ok(
+    ! ps_parse("[0][1](=~ '^ar')")->[2]->($args->[0], $args->[1]),
+    "eq must return false value here"
+);
+
+$args = [ [[1]], [\undef] ];
+
+ok(
+    ps_parse("(not =~ 'b')")->[0]->($args->[0], $args->[1]),
+    "eq must correctly handle undefs (doesn't croak)"
+);
+
+### eq
+
 $args = [
     [[0],[1]],
     [\"a",\"b"],
@@ -106,6 +135,8 @@ ok(
     ps_parse("(not eq 'b')")->[0]->($args->[0], $args->[1]),
     "eq must correctly handle undefs"
 );
+
+### defined
 
 ok(
     ! ps_parse('(defined)')->[0]->($args->[0], $args->[1]),
