@@ -23,7 +23,7 @@ eval { ps_parse('[0}') };
 like($@, qr/^Unsupported thing '\[0' in the path/, "unmatched brackets");
 
 eval { ps_parse('{a') };
-like($@, qr/^Unsupported thing '{a' in the path/, "unclosed curly brackets");
+like($@, qr/^Unsupported thing '\{a' in the path/, "unclosed curly brackets");
 
 eval { ps_parse('[0') };
 like($@, qr/^Unsupported thing '\[0' in the path/, "unclosed square brackets");
