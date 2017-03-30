@@ -224,15 +224,15 @@ sub ps_serialize($) {
                 croak "Incorrect array index '$i' (step #$sc)"
                     unless (looks_like_number($i) and int($i) == $i);
                 if (@ranges and (
-                    ($ranges[-1][1] + 1 == $i and $ranges[-1][0] <= $ranges[-1][1]) or   # ascending range
-                    ($ranges[-1][1] - 1 == $i and $ranges[-1][0] >= $ranges[-1][1])      # descending range
+                    ($ranges[-1][-1] + 1 == $i and $ranges[-1][0] < $i) or   # ascending
+                    ($ranges[-1][-1] - 1 == $i and $ranges[-1][0] > $i)      # descending
                 )) {
                     $ranges[-1][1] = $i; # update range
                 } else {
-                    push @ranges, [$i, $i];
+                    push @ranges, [$i]; # new range
                 }
             }
-            $out .= "[" . join(",", map { $_->[0] != $_->[1] ? "$_->[0]..$_->[1]" : $_->[0] } @{ranges}) . "]";
+            $out .= "[" . join(",", map { $_->[0] == $_->[-1] ? $_->[0] : "$_->[0]..$_->[-1]" } @{ranges}) . "]";
         } elsif (ref $step eq 'HASH') {
             my @items;
             if (keys %{$step} == 1 and exists $step->{keys} and ref $step->{keys} eq 'ARRAY' or not keys %{$step}) {
