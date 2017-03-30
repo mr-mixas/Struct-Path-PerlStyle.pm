@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 29;
+use Test::More tests => 30;
 use Storable qw(freeze);
 
 $Storable::canonical = 1;
@@ -105,4 +105,7 @@ $str = ps_serialize([[2,1,0],[10,8,7,6]]);
 is($str, '[2..0][10,8..6]', "descending ranges");
 
 $str = ps_serialize([[-2,-1,0,1,2,1,0,-1,-2]]);
-is($str, '[-2..2,1..-2]', "bidirectional ranges");
+is($str, '[-2..2,1..-2]', "bidirectional ranges (asc-desc)");
+
+$str = ps_serialize([[3,2,1,2,3]]);
+is($str, '[3..1,2..3]', "bidirectional ranges (desc-asc)");
