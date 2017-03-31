@@ -1,5 +1,10 @@
 Revision history for Struct-Path-PerlStyle
 
+0.63    2017-03-31
+        don't quote numbers used as hash keys in ps_serialize()
+        refactoring, small tests improvements
+        tests fixed for dev perl (5.25.9)
+
 0.62    2017-03-01
         regexp match filter (=~) added
         croak if unclosed brackets used in path
