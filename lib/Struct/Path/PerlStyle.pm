@@ -18,11 +18,11 @@ Struct::Path::PerlStyle - Perl-style syntax frontend for L<Struct::Path|Struct::
 
 =head1 VERSION
 
-Version 0.62
+Version 0.63
 
 =cut
 
-our $VERSION = '0.62';
+our $VERSION = '0.63';
 
 =head1 SYNOPSIS
 
@@ -241,7 +241,7 @@ sub ps_serialize($) {
                         croak "Unsupported hash key type 'undef' (step #$sc)";
                     } elsif (ref $k) {
                         croak "Unsupported hash key type '" . (ref $k) . "' (step #$sc)";
-                    } elsif ($k =~ /^[0-9a-zA-Z_]+$/) {
+                    } elsif (looks_like_number($k) or $k =~ /^[0-9a-zA-Z_]+$/) {
                         # \w doesn't fit -- PPI can't parse unquoted utf8 hash keys
                         # https://github.com/adamkennedy/PPI/issues/168#issuecomment-180506979
                         push @items, $k;
