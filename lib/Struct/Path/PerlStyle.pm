@@ -18,11 +18,11 @@ Struct::Path::PerlStyle - Perl-style syntax frontend for L<Struct::Path|Struct::
 
 =head1 VERSION
 
-Version 0.64
+Version 0.70
 
 =cut
 
-our $VERSION = '0.64';
+our $VERSION = '0.70';
 
 =head1 SYNOPSIS
 
@@ -101,8 +101,9 @@ our $FILTERS = {
 
 $FILTERS->{'<<'} = $FILTERS->{back}; # backward compatibility ('<<' is deprecated)
 
-sub ps_parse($) {
-    my $path = shift;
+sub ps_parse($;$);
+sub ps_parse($;$) {
+    my ($path, $opts) = @_;
     croak "Undefined path passed" unless (defined $path);
     my $doc = PPI::Lexer->lex_source($path);
     croak "Failed to parse passed path '$path'" unless (defined $doc);
@@ -182,6 +183,10 @@ sub ps_parse($) {
                 } @args;
                 $flt = $FILTERS->{$flt->content}->(@args); # closure with saved args
                 push @{$out}, ($neg ? sub { not $flt->(@_) } : $flt);
+            } elsif ($item->isa('PPI::Token::Symbol') and $item->raw_type eq '$') {
+                my $name = substr($item->content, 1); # cut off sigil
+                croak "Unknown alias '$name'" unless (exists $opts->{aliases}->{$name});
+                push @{$out}, @{ps_parse($opts->{aliases}->{$name}, $opts)};
             } else {
                 croak "Unsupported thing '" . $item->content . "' in the path (step #$sc)" ;
             }
