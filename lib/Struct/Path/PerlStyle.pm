@@ -107,16 +107,15 @@ sub ps_parse($;$) {
     croak "Undefined path passed" unless (defined $path);
     my $doc = PPI::Lexer->lex_source($path);
     croak "Failed to parse passed path '$path'" unless (defined $doc);
-    my $out = [];
-    my $sc = 0; # step counter
+    my @out;
 
     for my $step ($doc->elements) {
-        croak "Unsupported thing '" . $step->content . "' in the path (step #$sc)" unless ($step->can('elements'));
+        croak "Unsupported thing '$step' in the path (step #$#out)" unless ($step->can('elements'));
         for my $item ($step->elements) {
             $item->prune('PPI::Token::Whitespace') if $item->can('prune');
 
             if ($item->isa('PPI::Structure') and $item->start->content eq '{' and $item->finish) {
-                push @{$out}, {};
+                push @out, {};
                 for my $t (map { $_->elements } $item->children) {
                     my $tmp;
                     if ($t->isa('PPI::Token::Word') or $t->isa('PPI::Token::Number')) {
@@ -132,35 +131,34 @@ sub ps_parse($;$) {
                         $tmp->{regs} = substr(substr($t->content, 1), 0, -1); # get rid of slashes
                         $tmp->{regs} = qr($tmp->{regs});
                     } else {
-                        croak "Unsupported thing '" . $t->content . "' in hash key specification (step #$sc)";
+                        croak "Unsupported thing '$t' in hash key specification (step #$#out)";
                     }
-                    map { push @{$out->[-1]->{$_}}, delete $tmp->{$_} } keys %{$tmp};
+                    map { push @{$out[-1]->{$_}}, delete $tmp->{$_} } keys %{$tmp};
                 }
             } elsif ($item->isa('PPI::Structure') and $item->start->content eq '[' and $item->finish) {
-                push @{$out}, [];
+                push @out, [];
                 my $is_range;
                 for my $t (map { $_->elements } $item->children) {
                     if ($t->isa('PPI::Token::Number')) {
-                        croak "Floating-point numbers not allowed as array indexes (step #$sc)"
-                            unless ($t->content == int($t->content));
+                        croak "Incorrect array index '$t' (step #$#out)" unless ($t->content == int($t->content));
                         if ($is_range) {
-                            my $start = pop(@{$out->[-1]});
-                            croak "Undefined start for range (step #$sc)" unless (defined $start);
-                            push @{$out->[-1]},
+                            my $start = pop(@{$out[-1]});
+                            croak "Undefined start for range (step #$#out)" unless (defined $start);
+                            push @{$out[-1]},
                                 ($start < $t->content ? $start..$t->content : reverse $t->content..$start);
                             $is_range = undef;
                         } else {
-                            push @{$out->[-1]}, int($t->content);
+                            push @{$out[-1]}, int($t->content);
                         }
                     } elsif ($t->isa('PPI::Token::Operator') and $t->content eq ',') {
                         $is_range = undef;
                     } elsif ($t->isa('PPI::Token::Operator') and $t->content eq '..') {
                         $is_range = $t;
                     } else {
-                        croak "Unsupported thing '" . $t->content . "' in array item specification (step #$sc)";
+                        croak "Unsupported thing '$t' in array item specification (step #$#out)";
                     }
                 }
-                croak "Unfinished range secified (step #$sc)" if ($is_range);
+                croak "Unfinished range secified (step #$#out)" if ($is_range);
             } elsif ($item->isa('PPI::Structure') and $item->start->content eq '(' and $item->finish) {
                 my ($flt, @args) = map { $_->elements } $item->children;
                 my $neg;
@@ -168,9 +166,9 @@ sub ps_parse($;$) {
                     $neg = $flt->content;
                     $flt = shift @args;
                 }
-                croak "Unsupported thing '" . $flt->content . "' as operator (step #$sc)"
+                croak "Unsupported thing '$flt' as operator (step #$#out)"  # FIXME (flt => hook)
                     unless ($flt->isa('PPI::Token::Operator') or $flt->isa('PPI::Token::Word'));
-                croak "Unsupported operator '" . $flt->content . "' specified (step #$sc)"
+                croak "Unsupported operator '$flt' specified (step #$#out)" # FIXME (operator => hook)
                     unless (exists $FILTERS->{$flt->content});
                 @args = map {
                     if ($_->isa('PPI::Token::Quote::Single') or $_->isa('PPI::Token::Number')) {
@@ -178,23 +176,22 @@ sub ps_parse($;$) {
                     } elsif ($_->isa('PPI::Token::Quote::Double')) {
                         $_->string;
                     } else {
-                        croak "Unsupported thing '" . $_->content . "' as operator argument (step #$sc)"
+                        croak "Unsupported thing '$_' as operator argument (step #$#out)"
                     }
                 } @args;
                 $flt = $FILTERS->{$flt->content}->(@args); # closure with saved args
-                push @{$out}, ($neg ? sub { not $flt->(@_) } : $flt);
+                push @out, ($neg ? sub { not $flt->(@_) } : $flt);
             } elsif ($item->isa('PPI::Token::Symbol') and $item->raw_type eq '$') {
                 my $name = substr($item->content, 1); # cut off sigil
                 croak "Unknown alias '$name'" unless (exists $opts->{aliases}->{$name});
-                push @{$out}, @{ps_parse($opts->{aliases}->{$name}, $opts)};
+                push @out, @{ps_parse($opts->{aliases}->{$name}, $opts)};
             } else {
-                croak "Unsupported thing '" . $item->content . "' in the path (step #$sc)" ;
+                croak "Unsupported thing '$item' in the path (step #$#out)" ;
             }
         }
-        $sc++;
     }
 
-    return $out;
+    return \@out;
 }
 
 =head2 ps_serialize

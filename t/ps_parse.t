@@ -44,7 +44,7 @@ eval { ps_parse('[4..]') };
 like($@, qr/^Unfinished range secified/, "range with one boundary2");
 
 eval { ps_parse('[3.1415]') };
-like($@, qr/^Floating-point numbers not allowed as array indexes \(step #0\)/, "floating point array indexes");
+like($@, qr/^Incorrect array index '3.1415' \(step #0\)/, "floating point array indexes");
 
 eval { ps_parse('{a}{b+c}') };
 like($@, qr/^Unsupported thing '\+' in hash key specification \(step #1\)/, "garbage in hash keys definition");
