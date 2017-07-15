@@ -12,13 +12,13 @@ eval { ps_parse('(back}') };
 like($@, qr/^Unsupported thing '\(back' in the path/, "Unmatched brackets");
 
 eval { ps_parse('[0](=>)[-2]') };
-like($@, qr/^Unsupported operator '=>' specified/, "Unsupported operator");
+like($@, qr/^Unsupported hook '=>' \(step #0\)/, "Unsupported hook");
 
 eval { ps_parse('[0](back(back))[-2]') };
-like($@, qr/^Unsupported thing '\(back\)' as operator argument/, "Unsupported arg type");
+like($@, qr/^Unsupported thing '\(back\)' as hook argument/, "Unsupported arg type");
 
 eval { ps_parse('[0](back back)[-2]') };
-like($@, qr/^Unsupported thing 'back' as operator argument/, "Unsupported arg type");
+like($@, qr/^Unsupported thing 'back' as hook argument/, "Unsupported arg type");
 
 # args passed to callback by Struct::Path (sample)
 my $args = [

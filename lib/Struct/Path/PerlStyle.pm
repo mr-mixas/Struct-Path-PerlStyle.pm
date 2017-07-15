@@ -64,7 +64,7 @@ Parse perl-style string to L<Struct::Path|Struct::Path> path
 
 =cut
 
-our $FILTERS = {
+our $HOOKS = {
     'back' => sub { # step back $count times
         my $static = defined $_[0] ? $_[0] : 1;
         return sub {
@@ -99,7 +99,7 @@ our $FILTERS = {
     },
 };
 
-$FILTERS->{'<<'} = $FILTERS->{back}; # backward compatibility ('<<' is deprecated)
+$HOOKS->{'<<'} = $HOOKS->{back}; # backward compatibility ('<<' is deprecated)
 
 sub ps_parse($;$);
 sub ps_parse($;$) {
@@ -160,27 +160,26 @@ sub ps_parse($;$) {
                 }
                 croak "Unfinished range secified (step #$#out)" if ($is_range);
             } elsif ($item->isa('PPI::Structure') and $item->start->content eq '(' and $item->finish) {
-                my ($flt, @args) = map { $_->elements } $item->children;
+                my ($hook, @args) = map { $_->elements } $item->children;
                 my $neg;
-                if ($flt->content eq 'not' or $flt->content eq '!') {
-                    $neg = $flt->content;
-                    $flt = shift @args;
+                if ($hook->content eq 'not' or $hook->content eq '!') {
+                    $neg = $hook->content;
+                    $hook = shift @args;
                 }
-                croak "Unsupported thing '$flt' as operator (step #$#out)"  # FIXME (flt => hook)
-                    unless ($flt->isa('PPI::Token::Operator') or $flt->isa('PPI::Token::Word'));
-                croak "Unsupported operator '$flt' specified (step #$#out)" # FIXME (operator => hook)
-                    unless (exists $FILTERS->{$flt->content});
+                croak "Unsupported thing '$hook' as hook (step #$#out)"
+                    unless ($hook->isa('PPI::Token::Operator') or $hook->isa('PPI::Token::Word'));
+                croak "Unsupported hook '$hook' (step #$#out)" unless (exists $HOOKS->{$hook->content});
                 @args = map {
                     if ($_->isa('PPI::Token::Quote::Single') or $_->isa('PPI::Token::Number')) {
                         $_->literal;
                     } elsif ($_->isa('PPI::Token::Quote::Double')) {
                         $_->string;
                     } else {
-                        croak "Unsupported thing '$_' as operator argument (step #$#out)"
+                        croak "Unsupported thing '$_' as hook argument (step #$#out)"
                     }
                 } @args;
-                $flt = $FILTERS->{$flt->content}->(@args); # closure with saved args
-                push @out, ($neg ? sub { not $flt->(@_) } : $flt);
+                $hook = $HOOKS->{$hook->content}->(@args); # closure with saved args
+                push @out, ($neg ? sub { not $hook->(@_) } : $hook);
             } elsif ($item->isa('PPI::Token::Symbol') and $item->raw_type eq '$') {
                 my $name = substr($item->content, 1); # cut off sigil
                 croak "Unknown alias '$name'" unless (exists $opts->{aliases}->{$name});

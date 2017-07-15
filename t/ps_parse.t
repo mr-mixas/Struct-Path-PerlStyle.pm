@@ -29,7 +29,7 @@ eval { ps_parse('[0') };
 like($@, qr/^Unsupported thing '\[0' in the path/, "unclosed square brackets");
 
 eval { ps_parse('(0)') };
-like($@, qr/^Unsupported thing '0' as operator/, "parenthesis in the path");
+like($@, qr/^Unsupported thing '0' as hook/, "parenthesis in the path");
 
 eval { ps_parse('[[0]]') };
 like($@, qr/^Unsupported thing '\[0\]' in array item specification/, "garbage: nested steps");
