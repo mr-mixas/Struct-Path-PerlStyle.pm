@@ -64,7 +64,7 @@ is_deeply(
 
 is_deeply(
     ps_parse('{0}{01}{"2"}{3.14,"3.1415",1e-05}'),
-    [{keys => [0]},{keys => ["01"]},{keys => [2]},{keys => [3.14,3.1415,1e-05]}],
+    [{keys => [0]},{keys => ["01"]},{keys => [2]},{keys => [3.14,3.1415,1e-05 + 0]}],
     "numbers as hash keys"
 );
 

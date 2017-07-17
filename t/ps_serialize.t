@@ -79,7 +79,7 @@ $str = ps_serialize([{keys => ['кириллица']}]);
 is($str, '{"кириллица"}', "non ASCII characters must be quoted even it's a bareword");
 
 $str = ps_serialize([{keys => [42, '43', '42.0', 42.1, -41, -41.3, '-42.3', '1e+3', 1e3, 1e-05]}]);
-is($str, '{42,43,42.0,42.1,-41,-41.3,-42.3,1e+3,1000,1e-05}', "numbers must remain unquoted");
+is($str, '{42,43,42.0,42.1,-41,-41.3,-42.3,1e+3,1000,' . 1e-05 . '}', "numbers must remain unquoted");
 
 ### ARRAYS ###
 
