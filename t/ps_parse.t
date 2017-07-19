@@ -14,43 +14,43 @@ eval { ps_parse({}) };
 like($@, qr/^Failed to parse passed path 'HASH\(/);
 
 eval { ps_parse('{a},{b}') };
-like($@, qr/^Unsupported thing ',' in the path/, "garbage between path elements");
+like($@, qr/^Unsupported thing ',' in the path, step #1 /, "garbage between path elements");
 
 eval { ps_parse('{a} []') };
-like($@, qr/^Unsupported thing ' ' in the path/, "space between path elements");
+like($@, qr/^Unsupported thing ' ' in the path, step #1 /, "space between path elements");
 
 eval { ps_parse('[0}') };
-like($@, qr/^Unsupported thing '\[0' in the path/, "unmatched brackets");
+like($@, qr/^Unsupported thing '\[0' in the path, step #0 /, "unmatched brackets");
 
 eval { ps_parse('{a') };
-like($@, qr/^Unsupported thing '\{a' in the path/, "unclosed curly brackets");
+like($@, qr/^Unsupported thing '\{a' in the path, step #0 /, "unclosed curly brackets");
 
 eval { ps_parse('[0') };
-like($@, qr/^Unsupported thing '\[0' in the path/, "unclosed square brackets");
+like($@, qr/^Unsupported thing '\[0' in the path, step #0 /, "unclosed square brackets");
 
 eval { ps_parse('(0)') };
-like($@, qr/^Unsupported thing '0' as hook/, "parenthesis in the path");
+like($@, qr/^Unsupported thing '0' as hook, step #0 /, "parenthesis in the path");
 
 eval { ps_parse('[[0]]') };
-like($@, qr/^Unsupported thing '\[0\]' in array item specification/, "garbage: nested steps");
+like($@, qr/^Unsupported thing '\[0\]' for array index, step #0 /, "garbage: nested steps");
 
 eval { ps_parse('[0-2]') };
-like($@, qr/^Unsupported thing '-' in array item specification \(step #0\)/, "garbage in index definition");
+like($@, qr/^Unsupported thing '-' for array index, step #0 /, "garbage in index definition");
 
 eval { ps_parse('[..3]') };
-like($@, qr/^Undefined start for range/, "range with one boundary");
+like($@, qr/^Range start undefided, step #0 /, "range with one boundary");
 
 eval { ps_parse('[4..]') };
-like($@, qr/^Unfinished range secified/, "range with one boundary2");
+like($@, qr/^Unfinished range secified, step #0 /, "range with one boundary2");
 
 eval { ps_parse('[3.1415]') };
-like($@, qr/^Incorrect array index '3.1415' \(step #0\)/, "floating point array indexes");
+like($@, qr/^Incorrect array index '3.1415', step #0 /, "floating point array indexes");
 
 eval { ps_parse('{a}{b+c}') };
-like($@, qr/^Unsupported thing '\+' in hash key specification \(step #1\)/, "garbage in hash keys definition");
+like($@, qr/^Unsupported thing '\+' for hash key, step #1 /, "garbage in hash keys definition");
 
 eval { ps_parse('{/a//}') };
-like($@, qr|^Unsupported thing '/' in hash key specification \(step #0\)|, "regexp and one more slash");
+like($@, qr|^Unsupported thing '/' for hash key, step #0 |, "regexp and one more slash");
 
 ### EMPTY PATH ###
 

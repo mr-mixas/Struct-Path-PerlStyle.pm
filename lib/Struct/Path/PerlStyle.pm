@@ -110,7 +110,8 @@ sub ps_parse($;$) {
     my @out;
 
     for my $step ($doc->elements) {
-        croak "Unsupported thing '$step' in the path (step #$#out)" unless ($step->can('elements'));
+        croak "Unsupported thing '$step' in the path, step #" . @out
+            unless ($step->can('elements'));
         for my $item ($step->elements) {
             $item->prune('PPI::Token::Whitespace') if $item->can('prune');
 
@@ -131,7 +132,7 @@ sub ps_parse($;$) {
                         $tmp->{regs} = substr(substr($t->content, 1), 0, -1); # get rid of slashes
                         $tmp->{regs} = qr($tmp->{regs});
                     } else {
-                        croak "Unsupported thing '$t' in hash key specification (step #$#out)";
+                        croak "Unsupported thing '$t' for hash key, step #$#out";
                     }
                     map { push @{$out[-1]->{$_}}, delete $tmp->{$_} } keys %{$tmp};
                 }
@@ -140,10 +141,12 @@ sub ps_parse($;$) {
                 my $is_range;
                 for my $t (map { $_->elements } $item->children) {
                     if ($t->isa('PPI::Token::Number')) {
-                        croak "Incorrect array index '$t' (step #$#out)" unless ($t->content == int($t->content));
+                        croak "Incorrect array index '$t', step #$#out"
+                            unless ($t->content == int($t->content));
                         if ($is_range) {
                             my $start = pop(@{$out[-1]});
-                            croak "Undefined start for range (step #$#out)" unless (defined $start);
+                            croak "Range start undefided, step #$#out"
+                                unless (defined $start);
                             push @{$out[-1]},
                                 ($start < $t->content ? $start..$t->content : reverse $t->content..$start);
                             $is_range = undef;
@@ -155,10 +158,10 @@ sub ps_parse($;$) {
                     } elsif ($t->isa('PPI::Token::Operator') and $t->content eq '..') {
                         $is_range = $t;
                     } else {
-                        croak "Unsupported thing '$t' in array item specification (step #$#out)";
+                        croak "Unsupported thing '$t' for array index, step #$#out";
                     }
                 }
-                croak "Unfinished range secified (step #$#out)" if ($is_range);
+                croak "Unfinished range secified, step #$#out" if ($is_range);
             } elsif ($item->isa('PPI::Structure') and $item->start->content eq '(' and $item->finish) {
                 my ($hook, @args) = map { $_->elements } $item->children;
                 my $neg;
@@ -166,16 +169,16 @@ sub ps_parse($;$) {
                     $neg = $hook->content;
                     $hook = shift @args;
                 }
-                croak "Unsupported thing '$hook' as hook (step #$#out)"
+                croak "Unsupported thing '$hook' as hook, step #" . @out
                     unless ($hook->isa('PPI::Token::Operator') or $hook->isa('PPI::Token::Word'));
-                croak "Unsupported hook '$hook' (step #$#out)" unless (exists $HOOKS->{$hook->content});
+                croak "Unsupported hook '$hook', step #" . @out unless (exists $HOOKS->{$hook->content});
                 @args = map {
                     if ($_->isa('PPI::Token::Quote::Single') or $_->isa('PPI::Token::Number')) {
                         $_->literal;
                     } elsif ($_->isa('PPI::Token::Quote::Double')) {
                         $_->string;
                     } else {
-                        croak "Unsupported thing '$_' as hook argument (step #$#out)"
+                        croak "Unsupported thing '$_' as hook argument, step #" . @out;
                     }
                 } @args;
                 $hook = $HOOKS->{$hook->content}->(@args); # closure with saved args
@@ -185,7 +188,7 @@ sub ps_parse($;$) {
                 croak "Unknown alias '$name'" unless (exists $opts->{aliases}->{$name});
                 push @out, @{ps_parse($opts->{aliases}->{$name}, $opts)};
             } else {
-                croak "Unsupported thing '$item' in the path (step #$#out)" ;
+                croak "Unsupported thing '$item' in the path, step #" . @out;
             }
         }
     }
@@ -224,7 +227,7 @@ sub ps_serialize($) {
         if (ref $step eq 'ARRAY') {
             my @ranges;
             for my $i (@{$step}) {
-                croak "Incorrect array index '$i' (step #$sc)"
+                croak "Incorrect array index '$i', step #$sc"
                     unless (looks_like_number($i) and int($i) == $i);
                 if (@ranges and (
                     ($ranges[-1][-1] + 1 == $i and $ranges[-1][0] < $i) or   # ascending
@@ -241,9 +244,9 @@ sub ps_serialize($) {
             if (keys %{$step} == 1 and exists $step->{keys} and ref $step->{keys} eq 'ARRAY' or not keys %{$step}) {
                 for my $k (@{$step->{keys}}) {
                     if (not defined $k) {
-                        croak "Unsupported hash key type 'undef' (step #$sc)";
+                        croak "Unsupported hash key type 'undef', step #$sc";
                     } elsif (ref $k) {
-                        croak "Unsupported hash key type '" . (ref $k) . "' (step #$sc)";
+                        croak "Unsupported hash key type '" . (ref $k) . "', step #$sc";
                     } elsif (looks_like_number($k) or $k =~ /^[0-9a-zA-Z_]+$/) {
                         # \w doesn't fit -- PPI can't parse unquoted utf8 hash keys
                         # https://github.com/adamkennedy/PPI/issues/168#issuecomment-180506979
@@ -253,11 +256,11 @@ sub ps_serialize($) {
                     }
                 }
             } else {
-                croak "Unsupported hash definition (step #$sc)";
+                croak "Unsupported hash definition, step #$sc";
             }
             $out .= "{" . join(",", @items) . "}";
         } else {
-            croak "Unsupported thing in the path (step #$sc)";
+            croak "Unsupported thing in the path, step #$sc";
         }
         $sc++;
     }

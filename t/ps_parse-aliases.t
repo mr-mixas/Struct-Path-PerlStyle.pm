@@ -16,7 +16,7 @@ eval { ps_parse('$UNEXISTED_ALIAS') };
 like($@, qr/^Unknown alias 'UNEXISTED_ALIAS'/);
 
 eval { ps_parse('@UNSUPPORTED_SIGIL') };
-like($@, qr/^Unsupported thing '\@UNSUPPORTED_SIGIL' in the path/);
+like($@, qr/^Unsupported thing '\@UNSUPPORTED_SIGIL' in the path, step #0 /);
 
 eval { ps_parse('$A01.$A02', {aliases => $aliases}) };
 like($@, qr/^Unsupported thing '.' in the path/, "no operators suported for aliases");
