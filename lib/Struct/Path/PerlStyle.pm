@@ -230,8 +230,8 @@ sub ps_serialize($) {
                 croak "Incorrect array index '$i', step #$sc"
                     unless (looks_like_number($i) and int($i) == $i);
                 if (@ranges and (
-                    ($ranges[-1][-1] + 1 == $i and $ranges[-1][0] < $i) or   # ascending
-                    ($ranges[-1][-1] - 1 == $i and $ranges[-1][0] > $i)      # descending
+                    $ranges[-1][0] < $i and $ranges[-1][-1] == $i - 1 or   # ascending
+                    $ranges[-1][0] > $i and $ranges[-1][-1] == $i + 1      # descending
                 )) {
                     $ranges[-1][1] = $i; # update range
                 } else {
