@@ -5,7 +5,7 @@ use strict;
 use warnings FATAL => 'all';
 use parent qw(Exporter);
 use Carp qw(croak);
-use PPI::Lexer qw();
+use PPI;
 use Scalar::Util qw(looks_like_number);
 
 our @EXPORT_OK = qw(ps_parse ps_serialize);
@@ -18,11 +18,11 @@ Struct::Path::PerlStyle - Perl-style syntax frontend for L<Struct::Path|Struct::
 
 =head1 VERSION
 
-Version 0.70
+Version 0.71
 
 =cut
 
-our $VERSION = '0.70';
+our $VERSION = '0.71';
 
 =head1 SYNOPSIS
 
@@ -105,7 +105,7 @@ sub ps_parse($;$);
 sub ps_parse($;$) {
     my ($path, $opts) = @_;
     croak "Undefined path passed" unless (defined $path);
-    my $doc = PPI::Lexer->lex_source($path);
+    my $doc = PPI::Document->new(ref $path ? $path : \$path);
     croak "Failed to parse passed path '$path'" unless (defined $doc);
     my @out;
 
