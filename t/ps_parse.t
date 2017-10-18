@@ -38,7 +38,7 @@ eval { ps_parse('[0-2]') };
 like($@, qr/^Unsupported thing '-' for array index, step #0 /, "garbage in index definition");
 
 eval { ps_parse('[..3]') };
-like($@, qr/^Range start undefided, step #0 /, "range with one boundary");
+like($@, qr/^Range start absent, step #0 /, "range with one boundary");
 
 eval { ps_parse('[4..]') };
 like($@, qr/^Unfinished range secified, step #0 /, "range with one boundary2");

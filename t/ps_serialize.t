@@ -12,7 +12,7 @@ use Struct::Path::PerlStyle qw(ps_serialize);
 my $str;
 
 eval { $str = ps_serialize(undef) };
-like($@, qr/^Path must be an arrayref/, "undef as path");
+like($@, qr/^Arrayref expected for path/, "undef as path");
 
 $str = ps_serialize([]);
 is($str, '', "empty path");
@@ -22,7 +22,7 @@ like($@, qr/^Unsupported thing in the path, step #1 /, "trash as path step");
 
 # trash in hash definition #1
 eval { $str = ps_serialize([{garbage => ['a']}]) };
-like($@, qr/^Unsupported hash definition, step #0 /);
+like($@, qr/^Unsupported hash definition \(garbage\), step #0 /);
 
 # trash in hash definition #2
 eval { $str = ps_serialize([{keys => 'a'}]) };
@@ -30,7 +30,7 @@ like($@, qr/^Unsupported hash definition, step #0 /);
 
 # trash in hash definition #3
 eval { $str = ps_serialize([{keys => ['a'], garbage => ['b']}]) };
-like($@, qr/^Unsupported hash definition, step #0 /);
+like($@, qr/^Unsupported hash definition \(garbage\), step #0 /);
 
 # trash in hash definition #4
 eval { $str = ps_serialize([{keys => [undef]}]) };
