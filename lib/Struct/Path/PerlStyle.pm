@@ -8,6 +8,7 @@ use parent 'Exporter';
 use Carp 'croak';
 use PPI;
 use Scalar::Util 'looks_like_number';
+use re qw(is_regexp regexp_pattern);
 
 our @EXPORT_OK = qw(
     ps_parse
@@ -259,7 +260,10 @@ sub ps_serialize($) {
                     join(',', @errs) . "), step #$sc"
             }
 
-            if (exists $step->{keys} and ref $step->{keys} eq 'ARRAY' or not keys %{$step}) {
+            if (exists $step->{keys}) {
+                croak "Unsupported hash keys definition, step #$sc"
+                    unless (ref $step->{keys} eq 'ARRAY');
+
                 for my $k (@{$step->{keys}}) {
                     if (not defined $k) {
                         croak "Unsupported hash key type 'undef', step #$sc";
@@ -273,9 +277,22 @@ sub ps_serialize($) {
                         push @items, map { $_ =~ s/([\\$esc])/$esc{$1}/g; qq("$_") } $k; # escape and quote
                     }
                 }
-            } else {
-                croak "Unsupported hash definition, step #$sc";
             }
+
+            if (exists $step->{regs}) {
+                croak "Unsupported hash regs definition, step #$sc"
+                    unless (ref $step->{regs} eq 'ARRAY');
+
+                for my $r (@{$step->{regs}}) {
+                    croak "Regexp expected for regs item, step #$sc"
+                        unless (is_regexp($r));
+
+                    my ($patt, $mods) = regexp_pattern($r);
+                    $patt =~ s|/|\\/|g;
+                    push @items, "/$patt/$mods";
+                }
+            }
+
             $out .= "{" . join(",", @items) . "}";
         } else {
             croak "Unsupported thing in the path, step #$sc";

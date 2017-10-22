@@ -26,7 +26,7 @@ like($@, qr/^Unsupported hash definition \(garbage\), step #0 /);
 
 # trash in hash definition #2
 eval { $str = ps_serialize([{keys => 'a'}]) };
-like($@, qr/^Unsupported hash definition, step #0 /);
+like($@, qr/^Unsupported hash keys definition, step #0 /);
 
 # trash in hash definition #3
 eval { $str = ps_serialize([{keys => ['a'], garbage => ['b']}]) };

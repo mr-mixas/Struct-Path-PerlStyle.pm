@@ -11,3 +11,4 @@ t/ps_parse-aliases.t
 t/ps_parse-hooks.t
 t/ps_parse.t
 t/ps_serialize.t
+t/regexps.t
