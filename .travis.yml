@@ -11,7 +11,7 @@ perl:
   - "dev"
 matrix:
   include:
-    - perl: 5.18.2
+    - perl: 5.26
       env: COVERAGE=1
   allow_failures:
     - perl: "dev"
