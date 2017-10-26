@@ -1,6 +1,6 @@
 package Struct::Path::PerlStyle;
 
-use 5.006;
+use 5.010;
 use strict;
 use warnings FATAL => 'all';
 use parent 'Exporter';
