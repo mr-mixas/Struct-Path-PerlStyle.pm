@@ -7,6 +7,7 @@ use parent 'Exporter';
 
 use Carp 'croak';
 use PPI;
+use Safe;
 use Scalar::Util 'looks_like_number';
 use re qw(is_regexp regexp_pattern);
 
@@ -114,6 +115,16 @@ our $HOOKS = {
 
 $HOOKS->{'<<'} = $HOOKS->{back}; # backward compatibility ('<<' is deprecated)
 
+my $RSAFE = Safe->new;
+$RSAFE->permit_only(
+    'const',
+    'lineseq',
+    'qr',
+    'leaveeval',
+    'rv2gv',
+    'padany',
+);
+
 sub ps_parse($;$);
 sub ps_parse($;$) {
     my ($path, $opts) = @_;
@@ -139,9 +150,18 @@ sub ps_parse($;$) {
                 } elsif ($t->isa('PPI::Token::Quote::Double')) {
                     $tmp->{keys} = $t->string;
                     $tmp->{keys} =~ s/\\"/"/g;
-                } elsif ($t->isa('PPI::Token::Regexp::Match')) {
-                    $tmp->{regs} = substr($t, 1, -1); # get rid of slashes
-                    $tmp->{regs} = qr($tmp->{regs});
+                } elsif (
+                    $t->isa('PPI::Token::Regexp::Match') or
+                    $t->isa('PPI::Token::QuoteLike::Regexp')
+                ) {
+                    $tmp->{regs} = $RSAFE->reval(
+                        'qr/' . $t->get_match_string . '/' .
+                        join('', keys %{$t->get_modifiers}), 1
+                    );
+                    if ($@) {
+                        (my $err = $@) =~ s/ at \(eval \d+\) .+//s;
+                        croak "Step #$#out: failed to evaluate regexp: $err";
+                    }
                 } else {
                     croak "Unsupported thing '$t' for hash key, step #$#out";
                 }

@@ -3,14 +3,38 @@
 use strict;
 use warnings FATAL => 'all';
 
-use Test::More tests => 10;
-use Struct::Path::PerlStyle qw(ps_serialize);
+use Test::More tests => 16;
+use Struct::Path::PerlStyle qw(ps_parse ps_serialize);
+
+eval { ps_parse('{s/patt/subst/g}') };
+like($@, qr|^Unsupported thing 's/patt/subst/g' for hash key, step #0 |);
+
+eval { ps_parse('{word}{qr/(?{ exit 123 })/}') };
+like($@, qr|^Step #1: failed to evaluate regexp: 'exit' trapped |);
+
+eval { ps_parse('{qr/(?{ garbage })/}') };
+like($@, qr|^Step #0: failed to evaluate regexp: 'subroutine dereference' trapped |);
+
+eval { ps_parse('{qr/(?{ `echo >&2 WHOAA` })/}') };
+like($@, qr|^Step #0: failed to evaluate regexp: 'pushmark' trapped |);
 
 eval { ps_serialize([{regs => 1}]) };
 like($@, qr/^Unsupported hash regs definition, step #0 /);
 
 eval { ps_serialize([{regs => [1]}]) };
 like($@, qr/^Regexp expected for regs item, step #0 /);
+
+is_deeply(
+    ps_parse('{m/pat/,m/pat/i}'),
+    [{regs => [qr/pat/,qr/pat/i]}],
+    "m//"
+);
+
+is_deeply(
+    ps_parse('{qr/pat/,qr/pat/i}'),
+    [{regs => [qr/pat/, qr/pat/i]}],
+    "qr//"
+);
 
 is(
     ps_serialize([{regs => [qr/^Lonesome regexp$/mi]}]),
