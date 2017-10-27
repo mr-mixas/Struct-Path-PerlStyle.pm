@@ -9,14 +9,19 @@ use Struct::Path::PerlStyle qw(ps_parse ps_serialize);
 eval { ps_parse('{s/patt/subst/g}') };
 like($@, qr|^Unsupported thing 's/patt/subst/g' for hash key, step #0 |);
 
-eval { ps_parse('{word}{qr/(?{ exit 123 })/}') };
-like($@, qr|^Step #1: failed to evaluate regexp: 'exit' trapped |);
+SKIP: {
+    skip "Old perls (or Safe.pm?) silently dies on this regexps", 3
+        unless ($] >= 5.014);
 
-eval { ps_parse('{qr/(?{ garbage })/}') };
-like($@, qr|^Step #0: failed to evaluate regexp: 'subroutine dereference' trapped |);
+    eval { ps_parse('{word}{qr/(?{ exit 123 })/}') };
+    like($@, qr|^Step #1: failed to evaluate regexp: 'exit' trapped |);
 
-eval { ps_parse('{qr/(?{ `echo >&2 WHOAA` })/}') };
-like($@, qr|^Step #0: failed to evaluate regexp: 'pushmark' trapped |);
+    eval { ps_parse('{qr/(?{ garbage })/}') };
+    like($@, qr|^Step #0: failed to evaluate regexp: 'subroutine dereference' trapped |);
+
+    eval { ps_parse('{qr/(?{ `echo >&2 WHOAA` })/}') };
+    like($@, qr|^Step #0: failed to evaluate regexp: 'pushmark' trapped |);
+}
 
 eval { ps_serialize([{regs => 1}]) };
 like($@, qr/^Unsupported hash regs definition, step #0 /);
@@ -75,8 +80,9 @@ is(
 );
 
 is(
-    ps_serialize([{regs => [qr/Escape\x{263A}|\x1b|\N{U+263D}|\c[|\o{23072}|\033Sequences2/]}]),
-    '{/Escape\x{263A}|\x1b|\N{U+263D}|\c[|\o{23072}|\033Sequences2/u}', # /u mod automatically added
+    ps_serialize([{regs => [qr/Escape\x{263A}|\x1b|\N{U+263D}|\c[|\033Sequences2/]}]),
+    '{/Escape\x{263A}|\x1b|\N{U+263D}|\c[|\033Sequences2/' .
+        ($] >= 5.014 ? 'u' : '') . '}',
     'Escape sequences2'
 );
 
