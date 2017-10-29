@@ -1,0 +1,158 @@
+#!perl -T
+
+use strict;
+use warnings;
+
+use Test::More tests => 24;
+use Struct::Path::PerlStyle qw(ps_parse ps_serialize);
+
+use lib 't';
+use _common qw(roundtrip t_dump);
+
+# unquoted utf8 for hash key doesn't supported yet =(
+# https://github.com/adamkennedy/PPI/issues/168#issuecomment-180506979
+eval { ps_parse('{кириллица}'), };
+like($@, qr/Failed to parse passed path/, "can't parse unquoted utf8 hash keys");
+
+eval { ps_serialize([{garbage => ['a']}]) };
+like($@, qr/^Unsupported hash definition \(garbage\), step #0 /);
+
+eval { ps_serialize([{keys => 'a'}]) };
+like($@, qr/^Unsupported hash keys definition, step #0 /);
+
+eval { ps_serialize([{keys => ['a'], garbage => ['b']}]) };
+like($@, qr/^Unsupported hash definition \(garbage\), step #0 /);
+
+eval { ps_serialize([{keys => [undef]}]) };
+like($@, qr/^Unsupported hash key type 'undef', step #0 /);
+
+eval { ps_serialize([{keys => ['test',[]]}]) };
+like($@, qr/^Unsupported hash key type 'ARRAY', step #0 /);
+
+roundtrip (
+    [{keys => ['a']},{keys => ['b']},{keys => ['c']}],
+    '{a}{b}{c}',
+    "Explicit hash keys definition"
+);
+
+roundtrip (
+    [{keys => ['a']},{},{keys => ['c']}],
+    '{a}{}{c}',
+    "Implicit hash keys definition"
+);
+
+roundtrip (
+    [{keys => [""]},{keys => [" "]}],
+    '{""}{" "}',
+    "Empty string and space as hash keys"
+);
+
+# no roundtrip here - will be comma-separated
+# TODO: get rid of it? (ambigous)
+is_deeply(
+    ps_parse('{a b}{e d}'),
+    [{keys => ['a','b']},{keys => ['e','d']}],
+    "Spaces as delimiters"
+);
+
+# no roundtrip here - spaces will be dropped
+is_deeply(
+    ps_parse('{ c,a, b}{e  ,d }'),
+    [{keys => ['c','a','b']},{keys => ['e','d']}],
+    "Hash path with slices and whitespace garbage"
+);
+
+roundtrip (
+    [{keys => ['  a b']}],
+    '{"  a b"}',
+    "Double quotes"
+);
+
+# no roundtrip here - double quotes used on serialization
+is_deeply(
+    ps_parse("{'  c d'}"),
+    [{keys => ['  c d']}],
+    "Single quotes"
+);
+
+# no roundtrip here - no quotes for ASCII simple words
+is_deeply(
+    ps_parse('{\'first\',"second"}{"3rd" \'4th\'}'),
+    [{keys => ['first','second']},{keys => ['3rd','4th']}],
+    "Quotes on simple words"
+);
+
+roundtrip (
+    [{keys => ['b','a']},{keys => ['c','d']}],
+    '{b,a}{c,d}',
+    "Order should be respected"
+);
+
+roundtrip (
+    [{keys => ['co:lo:ns','semi;colons','dashe-s','sl/as/hes']}],
+    '{"co:lo:ns","semi;colons","dashe-s","sl/as/hes"}',
+    "Quotes for colons"
+);
+
+roundtrip (
+    [{keys => ['/looks like regexp, but string/','/another/']}],
+    '{"/looks like regexp, but string/","/another/"}',
+    "Quotes for regexp looking strings"
+);
+
+#roundtrip (
+#    [{keys => ['"','""', "'", "''"]}],
+#    '{"\"","\"\"","\'","\'\'"}',
+#    "Quoting characters"
+#);
+
+# TODO: remove when roundtrip above fixed
+is(
+    ps_serialize([{keys => ['"','""', "'", "''"]}]),
+    '{"\"","\"\"","\'","\'\'"}', # TODO it seems single quotes shouldn't be escaped
+    "Quoting characters"
+);
+
+TODO: {
+    local $TODO = "Parser doesn't handle escaped correctly";
+    roundtrip (
+        [{keys => ["\t","\n","\r","\f","\b","\a","\e"]}],
+        '{"\t","\n","\r","\f","\b","\a","\e"}',
+        "Escape sequences"
+    );
+}
+
+# TODO: remove when roundtrip above fixed
+my $str = ps_serialize([{keys => ["\t","\n","\r","\f","\b","\a","\e"]}]);
+is($str, '{"\t","\n","\r","\f","\b","\a","\e"}', "Escape sequences");
+
+#roundtrip (
+#    [{keys => [qw# \ | ( ) [ { ^ $ * + ? . #]}],
+#    '',
+#    "Pattern metacharacters"
+#);
+
+# TODO: remove when roundtrip above fixed (backslash absent here)
+$str = ps_serialize([{keys => [qw# | ( ) [ { ^ $ * + ? . #]}]);
+is($str, '{"|","(",")","[","{","^","$","*","+","?","."}', "Pattern metacharacters");
+
+roundtrip (
+    [{keys => ['кириллица']}],
+    '{"кириллица"}',
+    "Non ASCII characters must be quoted even it's a bareword"
+);
+
+roundtrip (
+    [{keys => [0, 42, '43', '42.0', 42.1, -41, -41.3, '-42.3', '1e+3', 1e3, 1e-05]}],
+    '{0,42,43,42.0,42.1,-41,-41.3,-42.3,1e+3,1000,' . 1e-05 . '}',
+    "Numbers as hash keys" # must remain unquoted on serialization
+);
+
+TODO: {
+    local $TODO = "Last step must be a single key";
+    is_deeply(
+        ps_parse('{01}{"01"}{01.0}'),
+        [{keys => ['01']},{keys => ['01']},{keys => ['01.0']}],
+        #"numbers as hash keys"
+    );
+}

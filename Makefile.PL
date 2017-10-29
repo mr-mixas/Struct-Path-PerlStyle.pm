@@ -15,7 +15,8 @@ WriteMakefile(
         'ExtUtils::MakeMaker' => 0,
     },
     BUILD_REQUIRES => {
-        'Storable'     => 0,
+        'Clone'        => 0,
+        'Storable'     => 0, # rm ?
         'Test::More'   => 0,
     },
     META_MERGE => {
