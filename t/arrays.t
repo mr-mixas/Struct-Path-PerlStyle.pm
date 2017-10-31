@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 17;
+use Test::More tests => 18;
 use Struct::Path::PerlStyle qw(ps_parse ps_serialize);
 
 use lib 't';
@@ -26,9 +26,8 @@ like($@, qr/^Unfinished range secified, step #0 /, "range with one boundary2");
 eval { ps_parse('[3.1415]') };
 like($@, qr/^Incorrect array index '3.1415', step #0 /, "floating point array indexes");
 
-# FIXME
-#eval { ps_serialize([[undef]]) };
-#like($@, qr/^Undefinded value for array index passsed, step #0 /, "garbage: float as index");
+eval { ps_serialize([[undef]]) };
+like($@, qr/^Incorrect array index 'undef', step #0 /, "garbage: undef as index");
 
 eval { ps_serialize([["a"]]) };
 like($@, qr/^Incorrect array index 'a', step #0 /, "garbage: non-number as index");

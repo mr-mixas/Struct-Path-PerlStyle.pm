@@ -259,7 +259,7 @@ sub ps_serialize($) {
 
         if (ref $step eq 'ARRAY') {
             for my $i (@{$step}) {
-                croak "Incorrect array index '$i', step #$sc"
+                croak "Incorrect array index '" . ($i // 'undef') . "', step #$sc"
                     unless (looks_like_number($i) and int($i) == $i);
                 if (@items and (
                     $items[-1][0] < $i and $items[-1][-1] == $i - 1 or   # ascending
