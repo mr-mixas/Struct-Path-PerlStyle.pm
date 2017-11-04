@@ -115,6 +115,22 @@ our $HOOKS = {
 
 $HOOKS->{'<<'} = $HOOKS->{back}; # backward compatibility ('<<' is deprecated)
 
+my %ESCP = (
+    '\\' => '\\\\', # single => double
+    '"'  => '\"',
+    "\a" => '\a',
+    "\b" => '\b',
+    "\t" => '\t',
+    "\n" => '\n',
+    "\f" => '\f',
+    "\r" => '\r',
+    "\e" => '\e',
+);
+my $ESCP = join('', sort keys %ESCP);
+
+my %INTP = map { $ESCP{$_} => $_ } keys %ESCP; # swap keys <-> values
+my $INTP = join('|', map { "\Q$_\E" } sort keys %INTP);
+
 my $RSAFE = Safe->new;
 $RSAFE->permit_only(
     'const',
@@ -149,7 +165,7 @@ sub ps_parse($;$) {
                     $tmp->{keys} = $t->literal;
                 } elsif ($t->isa('PPI::Token::Quote::Double')) {
                     $tmp->{keys} = $t->string;
-                    $tmp->{keys} =~ s/\\"/"/g;
+                    $tmp->{keys} =~ s/($INTP)/$INTP{$1}/gs; # interpolate
                 } elsif (
                     $t->isa('PPI::Token::Regexp::Match') or
                     $t->isa('PPI::Token::QuoteLike::Regexp')
@@ -235,18 +251,6 @@ Serialize L<Struct::Path|Struct::Path> path to perl-style string
 
 =cut
 
-my %esc = (
-    '"'  => '\"',
-    "\a" => '\a',
-    "\b" => '\b',
-    "\t" => '\t',
-    "\n" => '\n',
-    "\f" => '\f',
-    "\r" => '\r',
-    "\e" => '\e',
-);
-my $esc = join('', keys %esc);
-
 sub ps_serialize($) {
     my $path = shift;
 
@@ -285,16 +289,18 @@ sub ps_serialize($) {
                     unless (ref $step->{keys} eq 'ARRAY');
 
                 for my $k (@{$step->{keys}}) {
-                    if (not defined $k) {
-                        croak "Unsupported hash key type 'undef', step #$sc";
-                    } elsif (ref $k) {
-                        croak "Unsupported hash key type '" . (ref $k) . "', step #$sc";
-                    } elsif (looks_like_number($k) or $k =~ /^[0-9a-zA-Z_]+$/) {
+                    croak "Unsupported hash key type 'undef', step #$sc"
+                        unless (defined $k);
+                    croak "Unsupported hash key type '@{[ref $k]}', step #$sc"
+                        if (ref $k);
+
+                    push @items, $k;
+
+                    unless (looks_like_number($k) or $k =~ /^[0-9a-zA-Z_]+$/) {
                         # \w doesn't fit -- PPI can't parse unquoted utf8 hash keys
                         # https://github.com/adamkennedy/PPI/issues/168#issuecomment-180506979
-                        push @items, $k;
-                    } else {
-                        push @items, map { $_ =~ s/([\\$esc])/$esc{$1}/g; qq("$_") } $k; # escape and quote
+                        $items[-1] =~ s/([\Q$ESCP\E])/$ESCP{$1}/gs;    # escape
+                        $items[-1] = qq("$items[-1]");                 # quote
                     }
                 }
             }

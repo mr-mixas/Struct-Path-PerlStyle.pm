@@ -100,41 +100,30 @@ roundtrip (
     "Quotes for regexp looking strings"
 );
 
-#roundtrip (
-#    [{keys => ['"','""', "'", "''"]}],
-#    '{"\"","\"\"","\'","\'\'"}',
-#    "Quoting characters"
-#);
-
-# TODO: remove when roundtrip above fixed
-is(
-    ps_serialize([{keys => ['"','""', "'", "''"]}]),
-    '{"\"","\"\"","\'","\'\'"}', # TODO it seems single quotes shouldn't be escaped
+roundtrip (
+    [{keys => ['"','""', "'", "''"]}],
+    '{"\"","\"\"","\'","\'\'"}',
     "Quoting characters"
 );
 
-TODO: {
-    local $TODO = "Parser doesn't handle escaped correctly";
-    roundtrip (
-        [{keys => ["\t","\n","\r","\f","\b","\a","\e"]}],
-        '{"\t","\n","\r","\f","\b","\a","\e"}',
-        "Escape sequences"
-    );
-}
+roundtrip (
+    [{keys => ["\t","\n","\r","\f","\b","\a","\e"]}],
+    '{"\t","\n","\r","\f","\b","\a","\e"}',
+    "Escape sequences"
+);
 
-# TODO: remove when roundtrip above fixed
-my $str = ps_serialize([{keys => ["\t","\n","\r","\f","\b","\a","\e"]}]);
-is($str, '{"\t","\n","\r","\f","\b","\a","\e"}', "Escape sequences");
+# no roundtrip here - double quotes used on serialization
+is_deeply(
+    ps_parse('{\'\t\',\'\n\',\'\r\',\'\f\',\'\b\',\'\a\',\'\e\'}'),
+    [{keys => ['\t','\n','\r','\f','\b','\a','\e']}],
+    "Do not unescape when single quoted"
+);
 
-#roundtrip (
-#    [{keys => [qw# \ | ( ) [ { ^ $ * + ? . #]}],
-#    '',
-#    "Pattern metacharacters"
-#);
-
-# TODO: remove when roundtrip above fixed (backslash absent here)
-$str = ps_serialize([{keys => [qw# | ( ) [ { ^ $ * + ? . #]}]);
-is($str, '{"|","(",")","[","{","^","$","*","+","?","."}', "Pattern metacharacters");
+roundtrip (
+    [{keys => [qw# | ( ) [ { ^ $ * + ? . #]}],
+    '{"|","(",")","[","{","^","$","*","+","?","."}',
+    "Pattern metacharacters"
+);
 
 roundtrip (
     [{keys => ['кириллица']}],
