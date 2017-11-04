@@ -28,7 +28,6 @@ Examples:
     '{a}{b}'              # points to b's value
     '{a}{}'               # all values from a's subhash; same for arrays (using empty square brackets)
     '{a}{b,c}'            # b's and c's values
-    '{a}{b c}'            # same, space also is a delimiter
     '{a}{"space inside"}' # key must be quoted unless it is a simple word (single quotes supported as well)
     '{a}{"multi\nline"}'  # same for special characters (if double quoted)
     '{a}{"π"}'            # keys containing non ASCII characters also must be quoted*
@@ -60,9 +59,11 @@ Michael Samoglyadov, `<mixas at cpan.org>`
 
 # BUGS
 
-Please report any bugs or feature requests to `bug-struct-path-native at rt.cpan.org`, or through
-the web interface at [http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Struct-Path-PerlStyle](http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Struct-Path-PerlStyle). I will be notified, and then you'll
-automatically be notified of progress on your bug as I make changes.
+Please report any bugs or feature requests to
+`bug-struct-path-native at rt.cpan.org`, or through the web interface at
+[http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Struct-Path-PerlStyle](http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Struct-Path-PerlStyle). I
+will be notified, and then you'll automatically be notified of progress on
+your bug as I make changes.
 
 # SUPPORT
 

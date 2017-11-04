@@ -48,14 +48,14 @@ roundtrip (
 );
 
 # no roundtrip here - will be comma-separated
-# TODO: get rid of it? (ambigous)
+# TODO: get rid of it (deprecated since 0.72)
 is_deeply(
     ps_parse('{a b}{e d}'),
     [{keys => ['a','b']},{keys => ['e','d']}],
     "Spaces as delimiters"
 );
 
-# no roundtrip here - spaces will be dropped
+# no roundtrip here - spaces will be discarded
 is_deeply(
     ps_parse('{ c,a, b}{e  ,d }'),
     [{keys => ['c','a','b']},{keys => ['e','d']}],
