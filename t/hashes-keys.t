@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 24;
+use Test::More tests => 26;
 use Struct::Path::PerlStyle qw(ps_parse ps_serialize);
 
 use lib 't';
@@ -132,16 +132,30 @@ roundtrip (
 );
 
 roundtrip (
-    [{keys => [0, 42, '43', '42.0', 42.1, -41, -41.3, '-42.3', '1e+3', 1e3, 1e-05]}],
-    '{0,42,43,42.0,42.1,-41,-41.3,-42.3,1e+3,1000,' . 1e-05 . '}',
+    [{keys => [0, 42, '43', '42.0', 42.1, -41, -41.3, '-42.3']}],
+    '{0,42,43,42.0,42.1,-41,-41.3,-42.3}',
     "Numbers as hash keys" # must remain unquoted on serialization
 );
 
-TODO: {
-    local $TODO = "Last step must be a single key";
-    is_deeply(
-        ps_parse('{01}{"01"}{01.0}'),
-        [{keys => ['01']},{keys => ['01']},{keys => ['01.0']}],
-        #"numbers as hash keys"
+SKIP: {
+    skip 'mswin32 stringify such numbers a bit differently', 1
+        if ($^O eq 'mswin32');
+
+    roundtrip (
+        [{keys => ['1e+21', 1e15, 1e3, 1e-05]}],
+        '{1e+21,1e+15,1000,1e-05}',
+        'Scientific notation or a floating-point numbers'
     );
 }
+
+is_deeply(
+    ps_parse('{01.0}'), # bug?? (PPI treats this as twi things: octal and double)
+    [{keys => ['01','.0']}],
+);
+
+is_deeply(
+    ps_parse('{01}{"01"}{127.0.0.1}{  1}{undef}'),
+    [{keys => ['01']},{keys => ['01']},{keys => ['127.0.0.1']},{keys => ['1']},{keys => ['undef']}],
+    "Undecided %)"
+);
+
