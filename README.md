@@ -60,7 +60,7 @@ Michael Samoglyadov, `<mixas at cpan.org>`
 # BUGS
 
 Please report any bugs or feature requests to
-`bug-struct-path-native at rt.cpan.org`, or through the web interface at
+`bug-struct-path-perlstyle at rt.cpan.org`, or through the web interface at
 [http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Struct-Path-PerlStyle](http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Struct-Path-PerlStyle). I
 will be notified, and then you'll automatically be notified of progress on
 your bug as I make changes.
