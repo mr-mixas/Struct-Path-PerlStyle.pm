@@ -32,18 +32,37 @@ Struct::Path::PerlStyle - Perl-style syntax frontend for L<Struct::Path|Struct::
 
 =head1 VERSION
 
-Version 0.73
+Version 0.74
 
 =cut
 
-our $VERSION = '0.73';
+our $VERSION = '0.74';
 
 =head1 SYNOPSIS
 
+    use Struct::Path qw(spath);
     use Struct::Path::PerlStyle qw(ps_parse ps_serialize);
 
-    $struct = ps_parse('{a}{b}[1]');    # string to Struct::Path path
-    $string = ps_serialize($struct);    # Struct::Path path to string
+    my $nested = {
+        a => {
+            b => ["B0", "B1", "B2"],
+            c => ["C0", "C1"],
+            d => {},
+        },
+    };
+
+    my @found = spath($nested, ps_parse('{a}{}[0,2]'), deref => 1, paths => 1);
+
+    while (@found) {
+        my $path = shift @found;
+        my $data = shift @found;
+
+        print "path '" . ps_serialize($path) . "' refer to '$data'\n";
+    }
+
+    # path '{a}{b}[0]' refer to 'B0'
+    # path '{a}{b}[2]' refer to 'B2'
+    # path '{a}{c}[0]' refer to 'C0'
 
 =head1 EXPORT
 
@@ -59,7 +78,7 @@ Examples:
     '{a}{"space inside"}' # key must be quoted unless it is a simple word (single quotes supported as well)
     '{a}{"multi\nline"}'  # same for special characters (if double quoted)
     '{a}{"π"}'            # keys containing non ASCII characters also must be quoted*
-    '{a}{/regexp/}'       # regexp keys match
+    '{a}{/pattern/mods}'  # regexp keys match (fully supported, except code expressions)
     '{a}{b}[0,1,2,5]'     # 0, 1, 2 and 5 array's items
     '{a}{b}[0..2,5]'      # same, but using ranges
     '{a}{b}[9..0]'        # descending ranges allowed (perl doesn't)
