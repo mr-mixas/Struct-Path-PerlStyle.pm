@@ -139,12 +139,12 @@ roundtrip (
 
 SKIP: {
     skip 'mswin32 stringify such numbers a bit differently', 1
-        if ($^O eq 'mswin32');
+        if ($^O =~ /MSWin32/i);
 
     roundtrip (
-        [{keys => ['1e+21', 1e15, 1e3, 1e-05]}],
-        '{1e+21,1e+15,1000,1e-05}',
-        'Scientific notation or a floating-point numbers'
+        [{keys => ['1e+42', 1e43, 1e3, 1e-05]}],
+        '{1e+42,1e+43,1000,1e-05}',
+        'Scientific notation for a floating-point numbers'
     );
 }
 
