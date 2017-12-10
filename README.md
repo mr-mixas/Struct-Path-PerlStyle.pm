@@ -8,12 +8,12 @@ Struct::Path::PerlStyle - Perl-style syntax frontend for [Struct::Path](https://
 
 # VERSION
 
-Version 0.74
+Version 0.80
 
 # SYNOPSIS
 
     use Struct::Path qw(spath);
-    use Struct::Path::PerlStyle qw(ps_parse ps_serialize);
+    use Struct::Path::PerlStyle qw(path2str str2path);
 
     my $nested = {
         a => {
@@ -23,13 +23,13 @@ Version 0.74
         },
     };
 
-    my @found = spath($nested, ps_parse('{a}{}[0,2]'), deref => 1, paths => 1);
+    my @found = path($nested, str2path('{a}{}[0,2]'), deref => 1, paths => 1);
 
     while (@found) {
         my $path = shift @found;
         my $data = shift @found;
 
-        print "path '" . ps_serialize($path) . "' refer to '$data'\n";
+        print "path '" . path2str($path) . "' refer to '$data'\n";
     }
 
     # path '{a}{b}[0]' refer to 'B0'
@@ -60,17 +60,17 @@ Examples:
 
 # SUBROUTINES
 
-## ps\_parse
+## str2path
 
-Parse perl-style string to [Struct::Path](https://metacpan.org/pod/Struct::Path) path
+Convert perl-style string to [Struct::Path](https://metacpan.org/pod/Struct::Path) path structure
 
-    $struct_path = ps_parse($string);
+    $struct = str2path($string);
 
-## ps\_serialize
+## path2str
 
-Serialize [Struct::Path](https://metacpan.org/pod/Struct::Path) path to perl-style string
+Convert [Struct::Path](https://metacpan.org/pod/Struct::Path) path structure to perl-style string
 
-    $string = ps_serialize($struct_path);
+    $string = path2str($struct);
 
 # AUTHOR
 
