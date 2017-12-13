@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 18;
+use Test::More tests => 20;
 use Struct::Path::PerlStyle qw(str2path path2str);
 
 use lib 't';
@@ -66,6 +66,18 @@ roundtrip (
 );
 
 roundtrip (
+    [[0,0,0]],
+    '[0,0,0]',
+    "repeated indexes"
+);
+
+roundtrip (
+    [[0,1],[2,3,4],[4,3,2],[1,0]],
+    '[0,1][2..4][4..2][1,0]',
+    "small ranges"
+);
+
+roundtrip (
     [[0,1,2],[6,7,8,10]],
     '[0..2][6..8,10]',
     "ascending ranges"
@@ -85,7 +97,7 @@ roundtrip (
 
 roundtrip (
     [[3,2,1,2,3]],
-    '[3..1,2..3]',
+    '[3..1,2,3]',
     "bidirectional ranges (desc-asc)"
 );
 

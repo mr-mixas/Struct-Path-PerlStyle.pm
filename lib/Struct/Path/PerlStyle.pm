@@ -291,7 +291,14 @@ sub path2str($) {
                     push @items, [$i]; # new range
                 }
             }
-            $out .= "[" . join(",", map { $_->[0] == $_->[-1] ? $_->[0] : "$_->[0]..$_->[-1]" } @{items}) . "]";
+
+            for (@{items}) {
+                $_ = abs($_->[0] - $_->[-1]) < 2
+                    ? join(',', @{$_})
+                    : "$_->[0]..$_->[-1]"
+            }
+
+            $out .= "[" . join(",", @{items}) . "]";
         } elsif (ref $step eq 'HASH') {
             my $types = [ grep { exists $step->{$_} } qw(K R) ];
             if (keys %{$step} != @{$types}) {
