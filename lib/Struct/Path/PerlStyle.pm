@@ -176,21 +176,20 @@ sub str2path($;$) {
         if ($step->isa('PPI::Structure') and $step->start eq '{' and $step->finish) {
             push @out, {};
             for my $t (map { $_->elements } $step->children) {
-                my $tmp;
                 if ($t->isa('PPI::Token::Word') or $t->isa('PPI::Token::Number')) {
-                    $tmp->{K} = $t->content;
+                    push @{$out[-1]->{K}}, $t->content;
                 } elsif ($t->isa('PPI::Token::Operator') and $t eq ',') {
-                    next;
+                    ;
                 } elsif ($t->isa('PPI::Token::Quote::Single')) {
-                    $tmp->{K} = $t->literal;
+                    push @{$out[-1]->{K}}, $t->literal;
                 } elsif ($t->isa('PPI::Token::Quote::Double')) {
-                    $tmp->{K} = $t->string;
-                    $tmp->{K} =~ s/($INTP)/$INTP{$1}/gs; # interpolate
+                    push @{$out[-1]->{K}}, $t->string;
+                    $out[-1]->{K}->[-1] =~ s/($INTP)/$INTP{$1}/gs; # interpolate
                 } elsif (
                     $t->isa('PPI::Token::Regexp::Match') or
                     $t->isa('PPI::Token::QuoteLike::Regexp')
                 ) {
-                    $tmp->{R} = $RSAFE->reval(
+                    push @{$out[-1]->{R}}, $RSAFE->reval(
                         'qr/' . $t->get_match_string . '/' .
                         join('', keys %{$t->get_modifiers}), 1
                     );
@@ -201,7 +200,6 @@ sub str2path($;$) {
                 } else {
                     croak "Unsupported thing '$t' for hash key, step #$#out";
                 }
-                map { push @{$out[-1]->{$_}}, delete $tmp->{$_} } keys %{$tmp};
             }
         } elsif ($step->isa('PPI::Structure') and $step->start eq '[' and $step->finish) {
             push @out, [];
@@ -210,20 +208,19 @@ sub str2path($;$) {
                 if ($t->isa('PPI::Token::Number')) {
                     croak "Incorrect array index '$t', step #$#out"
                         unless ($t->content == int($t));
-                    if ($range) {
-                        my $start = pop(@{$out[-1]});
-                        croak "Range start absent, step #$#out"
-                            unless (defined $start);
+                    if (defined $range) {
                         push @{$out[-1]},
-                            ($start < $t->content ? $start .. $t : reverse $t .. $start);
+                            ($range < $t->content ? $range .. $t : reverse $t .. $range);
                         $range = undef;
                     } else {
                         push @{$out[-1]}, int($t);
                     }
                 } elsif ($t->isa('PPI::Token::Operator') and $t eq ',') {
-                    $range = undef;
+                    ;
                 } elsif ($t->isa('PPI::Token::Operator') and $t eq '..') {
-                    $range = $t;
+                    $range = pop(@{$out[-1]});
+                    croak "Range start absent, step #$#out"
+                        unless (defined $range);
                 } else {
                     croak "Unsupported thing '$t' for array index, step #$#out";
                 }
