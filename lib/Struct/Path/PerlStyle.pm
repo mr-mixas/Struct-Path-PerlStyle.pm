@@ -125,8 +125,6 @@ our $HOOKS = {
     },
 };
 
-$HOOKS->{'<<'} = $HOOKS->{back}; # backward compatibility ('<<' is deprecated)
-
 my %ESCP = (
     '\\' => '\\\\', # single => double
     '"'  => '\"',
