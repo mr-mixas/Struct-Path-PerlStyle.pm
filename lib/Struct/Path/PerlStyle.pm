@@ -9,6 +9,7 @@ use Carp 'croak';
 use PPI;
 use Safe;
 use Scalar::Util 'looks_like_number';
+use Text::Balanced qw(extract_bracketed);
 use re qw(is_regexp regexp_pattern);
 
 our @EXPORT_OK = qw(
@@ -90,6 +91,8 @@ Examples:
 
 =cut
 
+our $ALIASES;
+
 our $HOOKS = {
     'back' => sub { # step back $count times
         my $static = defined $_[0] ? $_[0] : 1;
@@ -159,8 +162,59 @@ Convert perl-style string to L<Struct::Path|Struct::Path> path structure
 
 =cut
 
-sub str2path($;$);
+sub _push_hash {
+    push @{$_[0]}, @{ _str2path($_[1]) };
+}
+
+sub _push_hook {
+    push @{$_[0]}, @{ _str2path($_[1]) };
+}
+
+sub _push_list {
+    push @{$_[0]}, @{ _str2path($_[1]) };
+}
+
 sub str2path($;$) {
+    my ($path, $opts) = @_;
+
+    croak "Undefined path passed" unless (defined $path);
+
+    local $ALIASES = $opts->{aliases} if (exists $opts->{aliases});
+
+    my (@steps, $step, $type);
+
+    while ($path) {
+        # separated match to be able to mix other type brackets inside
+        # current, mostly for hooks, for example: '( $x > $y )'
+        for ('{"}', '["]', '(")', '<">') {
+            ($step, $path) = extract_bracketed($path, $_, '');
+            last if ($step);
+        }
+
+        croak "Unsupported thing in the path, step #" . @steps unless ($step);
+
+        $type = substr $step,  0, 1, ''; # remove leading bracket
+                substr $step, -1, 1, ''; # remove trailing bracket
+
+        if ($type eq '{') {
+            _push_hash(\@steps, "{$step}");
+        } elsif ($type eq '[') {
+            _push_list(\@steps, "[$step]");
+        } elsif ($type eq '(') {
+            _push_hook(\@steps, "($step)");
+        } else { # <>
+            if (exists $ALIASES->{$step}) {
+                substr $path, 0, 0, $ALIASES->{$step};
+                redo;
+            }
+            croak "Unknown alias '$step'";
+        }
+    }
+
+    return \@steps;
+}
+
+sub _str2path($;$) {
     my ($path, $opts) = @_;
 
     croak "Undefined path passed" unless (defined $path);
@@ -246,10 +300,6 @@ sub str2path($;$) {
             } @args;
             $hook = $HOOKS->{$hook}->(@args); # closure with saved args
             push @out, ($neg ? sub { not $hook->(@_) } : $hook);
-        } elsif ($step->isa('PPI::Token::Symbol') and $step->raw_type eq '$') {
-            my $name = substr($step, 1); # cut off sigil
-            croak "Unknown alias '$name'" unless (exists $opts->{aliases}->{$name});
-            push @out, @{str2path($opts->{aliases}->{$name}, $opts)};
         } else {
             croak "Unsupported thing '$step' in the path, step #" . @out;
         }
