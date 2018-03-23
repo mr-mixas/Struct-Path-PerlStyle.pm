@@ -17,7 +17,7 @@ SKIP: {
         unless ($] >= 5.014);
 
     eval { str2path('{word}{qr/(?{ exit 123 })/}') };
-    like($@, qr|^Step #1: failed to evaluate regexp: 'exit' trapped |);
+    like($@, qr|^Step #.: failed to evaluate regexp: 'exit' trapped |);
 
     eval { str2path('{qr/(?{ garbage })/}') };
     like($@, qr|^Step #0: failed to evaluate regexp: 'subroutine dereference' trapped |);
