@@ -171,7 +171,21 @@ sub _push_hook {
 }
 
 sub _push_list {
-    push @{$_[0]}, @{ _str2path($_[1]) };
+    my ($steps, $text) = @_;
+    my (@range, @step);
+
+    for my $i (split(/\s*,\s*/, $text)) {
+        @range = grep {
+            croak "Incorrect array index '$i', step #" . @{$steps}
+                unless (looks_like_number($_) and $_ == int($_));
+        } ($i =~ /^\s*(-?\d+)\s*\.\.\s*(-?\d+)\s*$/) ? ($1, $2) : $i;
+
+        push @step, $range[0] < $range[-1]
+            ? $range[0] .. $range[-1]
+            : reverse $range[-1] .. $range[0];
+    }
+
+    push @{$steps}, \@step;
 }
 
 sub str2path($;$) {
@@ -199,7 +213,7 @@ sub str2path($;$) {
         if ($type eq '{') {
             _push_hash(\@steps, "{$step}");
         } elsif ($type eq '[') {
-            _push_list(\@steps, "[$step]");
+            _push_list(\@steps, $step);
         } elsif ($type eq '(') {
             _push_hook(\@steps, "($step)");
         } else { # <>
@@ -253,31 +267,6 @@ sub _str2path($;$) {
                     croak "Unsupported thing '$t' for hash key, step #$#out";
                 }
             }
-        } elsif ($step->isa('PPI::Structure') and $step->start eq '[' and $step->finish) {
-            push @out, [];
-            my $range;
-            for my $t (map { $_->elements } $step->children) {
-                if ($t->isa('PPI::Token::Number')) {
-                    croak "Incorrect array index '$t', step #$#out"
-                        unless ($t->content == int($t));
-                    if (defined $range) {
-                        push @{$out[-1]},
-                            ($range < $t->content ? $range .. $t : reverse $t .. $range);
-                        $range = undef;
-                    } else {
-                        push @{$out[-1]}, int($t);
-                    }
-                } elsif ($t->isa('PPI::Token::Operator') and $t eq ',') {
-                    ;
-                } elsif ($t->isa('PPI::Token::Operator') and $t eq '..') {
-                    $range = pop(@{$out[-1]});
-                    croak "Range start absent, step #$#out"
-                        unless (defined $range);
-                } else {
-                    croak "Unsupported thing '$t' for array index, step #$#out";
-                }
-            }
-            croak "Unfinished range secified, step #$#out" if ($range);
         } elsif ($step->isa('PPI::Structure') and $step->start eq '(' and $step->finish) {
             my ($hook, @args) = map { $_->elements } $step->children;
             my $neg;

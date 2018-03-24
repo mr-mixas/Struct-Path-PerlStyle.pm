@@ -12,16 +12,16 @@ use _common qw(roundtrip);
 ### ARRAYS ###
 
 eval { str2path('[[0]]') };
-like($@, qr/^Unsupported thing '\[0\]' for array index, step #0 /, "garbage: nested steps");
+like($@, qr/^Incorrect array index '\[0\]', step #0 /, "garbage: nested steps");
 
 eval { str2path('[0-2]') };
-like($@, qr/^Unsupported thing '-' for array index, step #0 /, "garbage in index definition");
+like($@, qr/^Incorrect array index '0-2', step #0 /, "garbage in index definition");
 
 eval { str2path('[..3]') };
-like($@, qr/^Range start absent, step #0 /, "range with one boundary");
+like($@, qr/^Incorrect array index '\.\.3', step #0 /, "range with one boundary");
 
 eval { str2path('[4..]') };
-like($@, qr/^Unfinished range secified, step #0 /, "range with one boundary2");
+like($@, qr/^Incorrect array index '4\.\.', step #0 /, "range with one boundary2");
 
 eval { str2path('[3.1415]') };
 like($@, qr/^Incorrect array index '3.1415', step #0 /, "floating point array indexes");
