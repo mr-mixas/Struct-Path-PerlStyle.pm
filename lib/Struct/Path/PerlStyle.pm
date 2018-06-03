@@ -4,12 +4,13 @@ use 5.010;
 use strict;
 use warnings FATAL => 'all';
 use parent 'Exporter';
+use utf8;
 
 use Carp 'croak';
 use PPI;
 use Safe;
 use Scalar::Util 'looks_like_number';
-use Text::Balanced qw(extract_bracketed);
+use Text::Balanced qw(extract_bracketed extract_quotelike);
 use re qw(is_regexp regexp_pattern);
 
 our @EXPORT_OK = qw(
@@ -78,7 +79,6 @@ Examples:
     '{a}{b,c}'            # b's and c's values
     '{a}{"space inside"}' # key must be quoted unless it is a simple word (single quotes supported as well)
     '{a}{"multi\nline"}'  # same for special characters (if double quoted)
-    '{a}{"π"}'            # keys containing non ASCII characters also must be quoted*
     '{a}{/pattern/mods}'  # regexp keys match (fully supported, except code expressions)
     '{a}{b}[0,1,2,5]'     # 0, 1, 2 and 5 array's items
     '{a}{b}[0..2,5]'      # same, but using ranges
@@ -144,6 +144,8 @@ my $ESCP = join('', sort keys %ESCP);
 my %INTP = map { $ESCP{$_} => $_ } keys %ESCP; # swap keys <-> values
 my $INTP = join('|', map { "\Q$_\E" } sort keys %INTP);
 
+my $HASH_KEY_CHARS = qr/[\p{XID_Continue}\.\-\+]/;
+
 my $RSAFE = Safe->new;
 $RSAFE->permit_only(
     'const',
@@ -162,8 +164,51 @@ Convert perl-style string to L<Struct::Path|Struct::Path> path structure
 
 =cut
 
+
 sub _push_hash {
-    push @{$_[0]}, @{ _str2path($_[1]) };
+    my ($steps, $text) = @_;
+    my ($body, $delim, $mods, %step, $token, $type);
+
+    while ($text) {
+        ($token, $text, $type, $delim, $body, $mods) =
+            (extract_quotelike($text))[0,1,3,4,5,10];
+
+        if (not defined $delim) { # bareword
+            push @{$step{K}}, $token = $1
+                if ($text =~ s/^\s*($HASH_KEY_CHARS+)//);
+        } elsif (!$type and $delim eq '"') {
+            $body =~ s/($INTP)/$INTP{$1}/gs; # interpolate
+            push @{$step{K}}, $body;
+        } elsif (!$type and $delim eq "'") {
+            push @{$step{K}}, $body;
+        } elsif (!$type and $delim eq '/' or $type eq 'm') {
+            push @{$step{R}}, $RSAFE->reval("qr/$body/$mods", 1);
+            if ($@) {
+                (my $err = $@) =~ s/ at \(eval \d+\) .+//s;
+                croak "Step #" . scalar @{$steps} .
+                    ": failed to evaluate regexp: $err";
+            }
+        } else { # things like qr, qw and so on
+            substr($text, 0, 0, $token);
+            undef $token;
+        }
+
+        croak "Unsupported key '$text', step #" . @{$steps}
+            if (!defined $token and $text);
+
+        $text =~ s/^\s+//; # discard trailing spaces
+
+        if ($text ne '') {
+            if ($text =~ s/^,//) {
+                croak "Trailing delimiter at step #" . @{$steps}
+                    if ($text eq '');
+            } else {
+                croak "Delimiter expected before '$text', step #" . @{$steps};
+            }
+        }
+    }
+
+    push @{$steps}, \%step;
 }
 
 sub _push_hook {
@@ -198,8 +243,8 @@ sub str2path($;$) {
     my (@steps, $step, $type);
 
     while ($path) {
-        # separated match to be able to mix other type brackets inside
-        # current, mostly for hooks, for example: '( $x > $y )'
+        # separated match: to be able to parse another brackets inside;
+        # currently mostly for hooks, for example: '( $x > $y )'
         for ('{"}', '["]', '(")', '<">') {
             ($step, $path) = extract_bracketed($path, $_, '');
             last if ($step);
@@ -211,7 +256,7 @@ sub str2path($;$) {
                 substr $step, -1, 1, ''; # remove trailing bracket
 
         if ($type eq '{') {
-            _push_hash(\@steps, "{$step}");
+            _push_hash(\@steps, $step);
         } elsif ($type eq '[') {
             _push_list(\@steps, $step);
         } elsif ($type eq '(') {
@@ -221,6 +266,7 @@ sub str2path($;$) {
                 substr $path, 0, 0, $ALIASES->{$step};
                 redo;
             }
+
             croak "Unknown alias '$step'";
         }
     }
@@ -239,35 +285,7 @@ sub _str2path($;$) {
     for my $step (map { $_->can('elements') ? $_->elements : $_ } $doc->elements) {
         $step->prune('PPI::Token::Whitespace') if $step->can('prune');
 
-        if ($step->isa('PPI::Structure') and $step->start eq '{' and $step->finish) {
-            push @out, {};
-            for my $t (map { $_->elements } $step->children) {
-                if ($t->isa('PPI::Token::Word') or $t->isa('PPI::Token::Number')) {
-                    push @{$out[-1]->{K}}, $t->content;
-                } elsif ($t->isa('PPI::Token::Operator') and $t eq ',') {
-                    ;
-                } elsif ($t->isa('PPI::Token::Quote::Single')) {
-                    push @{$out[-1]->{K}}, $t->literal;
-                } elsif ($t->isa('PPI::Token::Quote::Double')) {
-                    push @{$out[-1]->{K}}, $t->string;
-                    $out[-1]->{K}->[-1] =~ s/($INTP)/$INTP{$1}/gs; # interpolate
-                } elsif (
-                    $t->isa('PPI::Token::Regexp::Match') or
-                    $t->isa('PPI::Token::QuoteLike::Regexp')
-                ) {
-                    push @{$out[-1]->{R}}, $RSAFE->reval(
-                        'qr/' . $t->get_match_string . '/' .
-                        join('', keys %{$t->get_modifiers}), 1
-                    );
-                    if ($@) {
-                        (my $err = $@) =~ s/ at \(eval \d+\) .+//s;
-                        croak "Step #$#out: failed to evaluate regexp: $err";
-                    }
-                } else {
-                    croak "Unsupported thing '$t' for hash key, step #$#out";
-                }
-            }
-        } elsif ($step->isa('PPI::Structure') and $step->start eq '(' and $step->finish) {
+        if ($step->isa('PPI::Structure') and $step->start eq '(' and $step->finish) {
             my ($hook, @args) = map { $_->elements } $step->children;
             my $neg;
             if ($hook eq 'not' or $hook eq '!') {
@@ -357,9 +375,7 @@ sub path2str($) {
 
                     push @items, $k;
 
-                    unless (looks_like_number($k) or $k =~ /^[0-9a-zA-Z_]+$/) {
-                        # \w doesn't fit -- PPI can't parse unquoted utf8 hash keys
-                        # https://github.com/adamkennedy/PPI/issues/168#issuecomment-180506979
+                    unless ($k =~ /^$HASH_KEY_CHARS+$/) {
                         $items[-1] =~ s/([\Q$ESCP\E])/$ESCP{$1}/gs;    # escape
                         $items[-1] = qq("$items[-1]");                 # quote
                     }

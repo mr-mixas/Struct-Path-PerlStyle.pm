@@ -4,7 +4,7 @@ use strict;
 use warnings;
 
 use Struct::Path::PerlStyle qw(str2path path2str);
-use Test::More tests => 16;
+use Test::More tests => 14;
 
 use lib 't';
 use _common qw(roundtrip);
@@ -37,12 +37,6 @@ like($@, qr/^Unsupported thing in the path, step /, "unclosed square brackets");
 
 eval { str2path('(0)') };
 like($@, qr/^Unsupported thing .* hook, step /, "parenthesis in the path");
-
-eval { str2path('{a}{b+c}') };
-like($@, qr/^Unsupported thing .* for hash key, step /, "garbage in hash keys definition");
-
-eval { str2path('{/a//}') };
-like($@, qr|^Unsupported thing .* for hash key, step |, "regexp and one more slash");
 
 eval { path2str(undef) };
 like($@, qr/^Arrayref expected for path/, "undef as path");

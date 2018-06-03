@@ -49,7 +49,6 @@ Examples:
     '{a}{b,c}'            # b's and c's values
     '{a}{"space inside"}' # key must be quoted unless it is a simple word (single quotes supported as well)
     '{a}{"multi\nline"}'  # same for special characters (if double quoted)
-    '{a}{"π"}'            # keys containing non ASCII characters also must be quoted*
     '{a}{/pattern/mods}'  # regexp keys match (fully supported, except code expressions)
     '{a}{b}[0,1,2,5]'     # 0, 1, 2 and 5 array's items
     '{a}{b}[0..2,5]'      # same, but using ranges
