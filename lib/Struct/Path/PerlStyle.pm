@@ -144,7 +144,7 @@ my $ESCP = join('', sort keys %ESCP);
 my %INTP = map { $ESCP{$_} => $_ } keys %ESCP; # swap keys <-> values
 my $INTP = join('|', map { "\Q$_\E" } sort keys %INTP);
 
-my $HASH_KEY_CHARS = qr/[\p{XID_Continue}\.\-\+]/;
+my $HASH_KEY_CHARS = qr/[\p{Alnum}_\.\-\+]/;
 
 my $RSAFE = Safe->new;
 $RSAFE->permit_only(
