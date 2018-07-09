@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 use Struct::Path::PerlStyle qw(str2path);
-use Test::More tests => 24;
+use Test::More tests => 23;
 
 eval { str2path('(back') };
 like($@, qr/^Unsupported thing /, "Unclosed parenthesis");
@@ -15,10 +15,7 @@ eval { str2path('[0](=>)[-2]') };
 like($@, qr/^Unsupported .*, step/, "Unsupported hook");
 
 eval { str2path('[0](back(back))[-2]') };
-like($@, qr/^Unsupported thing .* as hook argument, step /, "Unsupported arg type");
-
-eval { str2path('[0](back back)[-2]') };
-like($@, qr/^Unsupported thing .* as hook argument, step /, "Unsupported arg type");
+like($@, qr/^Unsupported hook 'back\(back\)', step #1 /, "Unsupported arg type");
 
 # args passed to callback by Struct::Path (sample)
 my $args = [

@@ -55,8 +55,6 @@ Examples:
     '{a}{b}[9..0]'        # descending ranges allowed (perl doesn't)
     '{a}{b}(back){c}'     # step back (to previous level)
 
-    * at least until https://github.com/adamkennedy/PPI/issues/168
-
 # SUBROUTINES
 
 ## str2path

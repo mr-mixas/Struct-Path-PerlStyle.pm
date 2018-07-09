@@ -25,10 +25,10 @@ WriteMakefile(
     },
     PREREQ_PM => {
         'Carp'              => 0,
-        'PPI'               => 0,
         'Safe'              => 0,
         'Scalar::Util'      => 0,
         'Text::Balanced'    => 0,
+        'Text::ParseWords'  => 0,
         'parent'            => 0,
         're'                => 0.08, # it seems eralier versions has no is_regexp() and regexp_pattern()
         'strict'            => 0,

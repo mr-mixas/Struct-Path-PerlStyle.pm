@@ -7,10 +7,10 @@ use parent 'Exporter';
 use utf8;
 
 use Carp 'croak';
-use PPI;
 use Safe;
 use Scalar::Util 'looks_like_number';
 use Text::Balanced qw(extract_bracketed extract_quotelike);
+use Text::ParseWords 'parse_line';
 use re qw(is_regexp regexp_pattern);
 
 our @EXPORT_OK = qw(
@@ -84,8 +84,6 @@ Examples:
     '{a}{b}[0..2,5]'      # same, but using ranges
     '{a}{b}[9..0]'        # descending ranges allowed (perl doesn't)
     '{a}{b}(back){c}'     # step back (to previous level)
-
-    * at least until https://github.com/adamkennedy/PPI/issues/168
 
 =head1 SUBROUTINES
 
@@ -212,7 +210,23 @@ sub _push_hash {
 }
 
 sub _push_hook {
-    push @{$_[0]}, @{ _str2path($_[1]) };
+    my ($steps, $text) = @_;
+
+    my ($hook, @args) = parse_line(' ', 0, $text);
+    my $neg;
+    if ($hook eq 'not' or $hook eq '!') {
+        $neg = $hook;
+        $hook = shift @args;
+    } elsif ($hook =~ /^!/) {
+        $neg = 1;
+        substr $hook, 0, 1, '';
+    }
+
+    croak "Unsupported hook '$hook', step #" . @{$steps}
+        unless (exists $HOOKS->{$hook});
+
+    $hook = $HOOKS->{$hook}->(@args); # closure with saved args
+    push @{$steps}, ($neg ? sub { not $hook->(@_) } : $hook);
 }
 
 sub _push_list {
@@ -260,7 +274,7 @@ sub str2path($;$) {
         } elsif ($type eq '[') {
             _push_list(\@steps, $step);
         } elsif ($type eq '(') {
-            _push_hook(\@steps, "($step)");
+             _push_hook(\@steps, $step);
         } else { # <>
             if (exists $ALIASES->{$step}) {
                 substr $path, 0, 0, $ALIASES->{$step};
@@ -272,47 +286,6 @@ sub str2path($;$) {
     }
 
     return \@steps;
-}
-
-sub _str2path($;$) {
-    my ($path, $opts) = @_;
-
-    croak "Undefined path passed" unless (defined $path);
-    my $doc = PPI::Document->new(ref $path ? $path : \$path);
-    croak "Failed to parse passed path '$path'" unless (defined $doc);
-    my @out;
-
-    for my $step (map { $_->can('elements') ? $_->elements : $_ } $doc->elements) {
-        $step->prune('PPI::Token::Whitespace') if $step->can('prune');
-
-        if ($step->isa('PPI::Structure') and $step->start eq '(' and $step->finish) {
-            my ($hook, @args) = map { $_->elements } $step->children;
-            my $neg;
-            if ($hook eq 'not' or $hook eq '!') {
-                $neg = $hook;
-                $hook = shift @args;
-            }
-            croak "Unsupported thing '$hook' as hook, step #" . @out
-                unless ($hook->isa('PPI::Token::Operator') or $hook->isa('PPI::Token::Word'));
-            croak "Unsupported hook '$hook', step #" . @out
-                unless (exists $HOOKS->{$hook});
-            @args = map {
-                if ($_->isa('PPI::Token::Quote::Single') or $_->isa('PPI::Token::Number')) {
-                    $_->literal;
-                } elsif ($_->isa('PPI::Token::Quote::Double')) {
-                    $_->string;
-                } else {
-                    croak "Unsupported thing '$_' as hook argument, step #" . @out;
-                }
-            } @args;
-            $hook = $HOOKS->{$hook}->(@args); # closure with saved args
-            push @out, ($neg ? sub { not $hook->(@_) } : $hook);
-        } else {
-            croak "Unsupported thing '$step' in the path, step #" . @out;
-        }
-    }
-
-    return \@out;
 }
 
 =head2 path2str
