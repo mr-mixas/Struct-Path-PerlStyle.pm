@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 20;
+use Test::More tests => 22;
 use Struct::Path::PerlStyle qw(str2path path2str);
 
 use lib 't';
@@ -25,6 +25,12 @@ like($@, qr/^Incorrect array index '4\.\.', step #0 /, "range with one boundary2
 
 eval { str2path('[3.1415]') };
 like($@, qr/^Incorrect array index '3.1415', step #0 /, "floating point array indexes");
+
+eval { str2path('[,0]') };
+like($@, qr/^Incorrect array index '', step #0 /, "leading separator");
+
+eval { str2path('[1,]') };
+like($@, qr/^Incorrect array index '', step #0 /, "trailing separator");
 
 eval { path2str([[undef]]) };
 like($@, qr/^Incorrect array index 'undef', step #0 /, "garbage: undef as index");

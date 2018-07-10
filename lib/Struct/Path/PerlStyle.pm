@@ -232,7 +232,7 @@ sub _push_list {
     my ($steps, $text) = @_;
     my (@range, @step);
 
-    for my $i (split(/\s*,\s*/, $text)) {
+    for my $i (split /\s*,\s*/, $text, -1) {
         @range = grep {
             croak "Incorrect array index '$i', step #" . @{$steps}
                 unless (eval { $_ == int($_) });
