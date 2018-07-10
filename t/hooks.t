@@ -6,13 +6,13 @@ use Struct::Path::PerlStyle qw(str2path);
 use Test::More tests => 23;
 
 eval { str2path('(back') };
-like($@, qr/^Unsupported thing /, "Unclosed parenthesis");
+like($@, qr/^Unsupported thing in the path, step #0: '\(back' /, "Unclosed parenthesis");
 
 eval { str2path('(back}') };
-like($@, qr/^Unsupported thing /, "Unmatched brackets");
+like($@, qr/^Unsupported thing in the path, step #0: '\(back}' /, "Unmatched brackets");
 
 eval { str2path('[0](=>)[-2]') };
-like($@, qr/^Unsupported .*, step/, "Unsupported hook");
+like($@, qr/^Unsupported hook '=>', step #1 /, "Unsupported hook");
 
 eval { str2path('[0](back(back))[-2]') };
 like($@, qr/^Unsupported hook 'back\(back\)', step #1 /, "Unsupported arg type");

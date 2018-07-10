@@ -257,14 +257,15 @@ sub str2path($;$) {
     my (@steps, $step, $type);
 
     while ($path) {
-        # separated match: to be able to parse another brackets inside;
+        # separated match: to be able to have another brackets inside;
         # currently mostly for hooks, for example: '( $x > $y )'
         for ('{"}', '["]', '(")', '<">') {
             ($step, $path) = extract_bracketed($path, $_, '');
             last if ($step);
         }
 
-        croak "Unsupported thing in the path, step #" . @steps unless ($step);
+        croak "Unsupported thing in the path, step #" . @steps . ": '$path'"
+            unless ($step);
 
         $type = substr $step,  0, 1, ''; # remove leading bracket
                 substr $step, -1, 1, ''; # remove trailing bracket

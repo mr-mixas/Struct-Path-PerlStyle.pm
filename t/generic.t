@@ -15,28 +15,31 @@ eval { str2path(undef) };
 like($@, qr/^Undefined path passed/);
 
 eval { str2path({}) };
-like($@, qr/^Unsupported thing in the path, step/);
+like($@, qr/^Unsupported thing in the path, step #0: 'HASH\(0x/);
 
 eval { str2path('{a},{b}') };
-like($@, qr/^Unsupported thing in the path, step /, "garbage between path elements");
+like($@, qr/^Unsupported thing in the path, step #1: ',{b}' /, "garbage between path elements");
 
 eval { str2path('{a} []') };
-like($@, qr/^Unsupported thing in the path, step /, "space between path elements");
+like($@, qr/^Unsupported thing in the path, step #1: ' \[\]'/, "space between path elements");
 
 eval { str2path('{a};[]') };
-like($@, qr/^Unsupported thing in the path, step /, "semicolon between path elements");
+like($@, qr/^Unsupported thing in the path, step #1: ';\[\]' /, "semicolon between path elements");
 
 eval { str2path('[0}') };
-like($@, qr/^Unsupported thing in the path, step /, "unmatched brackets");
+like($@, qr/^Unsupported thing in the path, step #0: '\[0\}' /, "unmatched brackets");
 
 eval { str2path('{a') };
-like($@, qr/^Unsupported thing in the path, step /, "unclosed curly brackets");
+like($@, qr/^Unsupported thing in the path, step #0: '\{a' /, "unclosed curly brackets");
 
 eval { str2path('[0') };
-like($@, qr/^Unsupported thing in the path, step /, "unclosed square brackets");
+like($@, qr/^Unsupported thing in the path, step #0: '\[0' /, "unclosed square brackets");
 
 eval { str2path('(0)') };
 like($@, qr/^Unsupported hook '0', step #0 /, "parenthesis in the path");
+
+
+
 
 eval { path2str(undef) };
 like($@, qr/^Arrayref expected for path/, "undef as path");
@@ -48,7 +51,7 @@ like($@, qr/^Unsupported thing in the path, step /, "trash as path step");
 
 $_ = 'bareword';
 eval { str2path($_) };
-like($@, qr/^Unsupported thing in the path, step #0 at /);
+like($@, qr/^Unsupported thing in the path, step #0: 'bareword' /);
 is($_, 'bareword', '$_ must remain unchanged');
 
 roundtrip ([], '', 'Empty path');
