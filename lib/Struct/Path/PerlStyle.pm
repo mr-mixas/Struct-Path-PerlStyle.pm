@@ -8,7 +8,6 @@ use utf8;
 
 use Carp 'croak';
 use Safe;
-use Scalar::Util 'looks_like_number';
 use Text::Balanced qw(extract_bracketed extract_quotelike);
 use Text::ParseWords 'parse_line';
 use re qw(is_regexp regexp_pattern);
@@ -236,7 +235,7 @@ sub _push_list {
     for my $i (split(/\s*,\s*/, $text)) {
         @range = grep {
             croak "Incorrect array index '$i', step #" . @{$steps}
-                unless (looks_like_number($_) and $_ == int($_));
+                unless (eval { $_ == int($_) });
         } ($i =~ /^\s*(-?\d+)\s*\.\.\s*(-?\d+)\s*$/) ? ($1, $2) : $i;
 
         push @step, $range[0] < $range[-1]
@@ -310,7 +309,7 @@ sub path2str($) {
         if (ref $step eq 'ARRAY') {
             for my $i (@{$step}) {
                 croak "Incorrect array index '" . ($i // 'undef') . "', step #$sc"
-                    unless (looks_like_number($i) and int($i) == $i);
+                    unless (eval { int($i) == $i });
                 if (@items and (
                     $items[-1][0] < $i and $items[-1][-1] == $i - 1 or   # ascending
                     $items[-1][0] > $i and $items[-1][-1] == $i + 1      # descending

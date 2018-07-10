@@ -26,7 +26,6 @@ WriteMakefile(
     PREREQ_PM => {
         'Carp'              => 0,
         'Safe'              => 0,
-        'Scalar::Util'      => 0,
         'Text::Balanced'    => 0,
         'Text::ParseWords'  => 0,
         'parent'            => 0,
