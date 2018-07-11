@@ -3,26 +3,44 @@
 use strict;
 use warnings FATAL => 'all';
 
-use Test::More tests => 18;
+use Test::More tests => 22;
 use Struct::Path::PerlStyle qw(str2path path2str);
 
 use lib 't';
 use _common qw(roundtrip);
 
 eval { str2path('{s/patt/subst/g}') };
-like($@, qr|^Unsupported thing 's/patt/subst/g' for hash key, step #0 |);
+like($@, qr|^Unsupported key 's/patt/subst/g', step #0 |);
+
+eval { str2path('{qr/pat/}') };
+like($@, qr|^Unsupported key 'qr/pat/', step #0 |);
+
+eval { str2path('{/a//}') };
+like($@, qr|^Delimiter expected before '/', step #0 |, "regexp and one more slash");
+
+eval { str2path('{/a//b/}') };
+like($@, qr|^Delimiter expected before '/b/', step #0 |, "two regs, no delimiter");
+
+eval { str2path('{/a/"b"}') };
+like($@, qr|^Delimiter expected before '"b"', step #0 |, "reg and quoted string, no delimiter");
+
+eval { str2path('{,/a/}') };
+like($@, qr|^Unsupported key ',/a/', step #0 |, "Leading delimiter");
+
+eval { str2path('{/a/,}') };
+like($@, qr|^Trailing delimiter at step #0 |, "Trailing delimiter");
 
 SKIP: {
     skip "Old perls (or Safe.pm?) silently dies on this regexps", 3
         unless ($] >= 5.014);
 
-    eval { str2path('{word}{qr/(?{ exit 123 })/}') };
+    eval { str2path('{word}{/(?{ exit 123 })/}') };
     like($@, qr|^Step #1: failed to evaluate regexp: 'exit' trapped |);
 
-    eval { str2path('{qr/(?{ garbage })/}') };
+    eval { str2path('{/(?{ garbage })/}') };
     like($@, qr|^Step #0: failed to evaluate regexp: 'subroutine dereference' trapped |);
 
-    eval { str2path('{qr/(?{ `echo >&2 WHOAA` })/}') };
+    eval { str2path('{/(?{ `echo >&2 WHOAA` })/}') };
     like($@, qr|^Step #0: failed to evaluate regexp: 'pushmark' trapped |);
 }
 
@@ -39,15 +57,9 @@ roundtrip (
 );
 
 is_deeply(
-    str2path('{m/pat/,m!pat!i,m|pat|m,m#pat#s,m{pat}x}'),
-    [{R => [qr/pat/,qr/pat/i,qr/pat/m,qr/pat/s,qr/pat/x]}],
+    str2path('{m/pat/,m!pat!i,m|pat|m,m#pat#s,m{pat}x,m(pat)i,m[pat]i,m<pat>i,m"pat"i,m\'pat\'i}'),
+    [{R => [qr/pat/,qr/pat/i,qr/pat/m,qr/pat/s,qr/pat/x,qr/pat/i,qr/pat/i,qr/pat/i,qr/pat/i,qr/pat/i]}],
     "m//"
-);
-
-is_deeply(
-    str2path('{qr/pat/,qr!pat!i,qr|pat|m,qr#pat#s,qr{pat}x}'),
-    [{R => [qr/pat/,qr/pat/i,qr/pat/m,qr/pat/s,qr/pat/x]}],
-    "qr//"
 );
 
 roundtrip (
@@ -92,12 +104,15 @@ roundtrip (
     'Escape sequences'
 );
 
-roundtrip (
-    [{R => [qr/Escape\x{263A}|\x1b|\N{U+263D}|\c[|\033Sequences2/]}],
-    '{/Escape\x{263A}|\x1b|\N{U+263D}|\c[|\033Sequences2/' .
-        ($] >= 5.014 ? 'u' : '') . '}',
-    'Escape sequences2'
-);
+# FIXME
+# Text::Balanced has no support for 'u' modifier ()
+# https://metacpan.org/source/SHAY/Text-Balanced-2.03/lib/Text/Balanced.pm#L633
+#roundtrip (
+#    [{R => [qr/Escape\x{263A}|\x1b|\N{U+263D}|\c[|\033Sequences2/]}],
+#    '{/Escape\x{263A}|\x1b|\N{U+263D}|\c[|\033Sequences2/' .
+#        ($] >= 5.014 ? 'u' : '') . '}',
+#    'Escape sequences2'
+#);
 
 roundtrip (
     [{R => [qr#^([^\?]{1,5}|.+|\\?|)*$#]}],
