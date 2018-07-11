@@ -178,7 +178,7 @@ sub _push_hash {
             push @{$step{K}}, $body;
         } elsif (!$type and $delim eq "'") {
             push @{$step{K}}, $body;
-        } elsif (!$type and $delim eq '/' or $type eq 'm') {
+        } elsif ($delim eq '/' and !$type or $type eq 'm') {
             push @{$step{R}}, $RSAFE->reval("qr/$body/$mods", 1);
             if ($@) {
                 (my $err = $@) =~ s/ at \(eval \d+\) .+//s;
@@ -191,7 +191,7 @@ sub _push_hash {
         }
 
         croak "Unsupported key '$text', step #" . @{$steps}
-            if (!defined $token and $text);
+            if (!defined $token);
 
         $text =~ s/^\s+//; # discard trailing spaces
 

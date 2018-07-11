@@ -39,7 +39,7 @@ eval { path2str([["a"]]) };
 like($@, qr/^Incorrect array index 'a', step #0 /, "garbage: non-number as index");
 
 eval { path2str([[0.3]]) };
-like($@, qr/^Incorrect array index '0.3', step #0 /, "garbage: float as index");
+like($@, qr/^Incorrect array index '0\.3', step #0 /, "garbage: float as index");
 
 roundtrip (
     [[2],[5],[0]],

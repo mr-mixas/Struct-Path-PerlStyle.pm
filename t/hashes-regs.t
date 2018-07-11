@@ -3,7 +3,7 @@
 use strict;
 use warnings FATAL => 'all';
 
-use Test::More tests => 21;
+use Test::More tests => 22;
 use Struct::Path::PerlStyle qw(str2path path2str);
 
 use lib 't';
@@ -19,7 +19,10 @@ eval { str2path('{/a//}') };
 like($@, qr|^Delimiter expected before '/', step #0 |, "regexp and one more slash");
 
 eval { str2path('{/a//b/}') };
-like($@, qr|^Delimiter expected before '/b/', step #0|, "no delimiter");
+like($@, qr|^Delimiter expected before '/b/', step #0 |, "two regs, no delimiter");
+
+eval { str2path('{/a/"b"}') };
+like($@, qr|^Delimiter expected before '"b"', step #0 |, "reg and quoted string, no delimiter");
 
 eval { str2path('{,/a/}') };
 like($@, qr|^Unsupported key ',/a/', step #0 |, "Leading delimiter");
@@ -54,8 +57,8 @@ roundtrip (
 );
 
 is_deeply(
-    str2path('{m/pat/,m!pat!i,m|pat|m,m#pat#s,m{pat}x}'),
-    [{R => [qr/pat/,qr/pat/i,qr/pat/m,qr/pat/s,qr/pat/x]}],
+    str2path('{m/pat/,m!pat!i,m|pat|m,m#pat#s,m{pat}x,m(pat)i,m[pat]i,m<pat>i,m"pat"i,m\'pat\'i}'),
+    [{R => [qr/pat/,qr/pat/i,qr/pat/m,qr/pat/s,qr/pat/x,qr/pat/i,qr/pat/i,qr/pat/i,qr/pat/i,qr/pat/i]}],
     "m//"
 );
 

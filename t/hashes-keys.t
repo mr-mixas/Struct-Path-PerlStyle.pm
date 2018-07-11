@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 31;
+use Test::More tests => 32;
 use Struct::Path::PerlStyle qw(str2path path2str);
 
 use lib 't';
@@ -103,14 +103,20 @@ roundtrip (
 );
 
 roundtrip (
-    [{K => ['co:lo:ns','semi;colons','dashe-s','sl/as/hes']}],
-    '{"co:lo:ns","semi;colons",dashe-s,"sl/as/hes"}',
+    [{K => ['+','-','.','_']}],
+    '{+,-,.,_}',
+    "Bareword hash keys extra"
+);
+
+roundtrip (
+    [{K => ['co:lo:ns','semi;colons','sl/as/hes']}],
+    '{"co:lo:ns","semi;colons","sl/as/hes"}',
     "Quotes for punct characters"
 );
 
 roundtrip (
-    [{K => ['/looks like regexp, but string/','/another/']}],
-    '{"/looks like regexp, but string/","/another/"}',
+    [{K => ['/looks like regexp, but string/','m/another/']}],
+    '{"/looks like regexp, but string/","m/another/"}',
     "Quotes for regexp looking strings"
 );
 

@@ -18,7 +18,7 @@ eval { str2path({}) };
 like($@, qr/^Unsupported thing in the path, step #0: 'HASH\(0x/);
 
 eval { str2path('{a},{b}') };
-like($@, qr/^Unsupported thing in the path, step #1: ',{b}' /, "garbage between path elements");
+like($@, qr/^Unsupported thing in the path, step #1: ',\{b\}' /, "garbage between path elements");
 
 eval { str2path('{a} []') };
 like($@, qr/^Unsupported thing in the path, step #1: ' \[\]'/, "space between path elements");
