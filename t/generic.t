@@ -35,11 +35,8 @@ like($@, qr/^Unsupported thing in the path, step #0: '\{a' /, "unclosed curly br
 eval { str2path('[0') };
 like($@, qr/^Unsupported thing in the path, step #0: '\[0' /, "unclosed square brackets");
 
-eval { str2path('(0)') };
-like($@, qr/^Unsupported hook '0', step #0 /, "parenthesis in the path");
-
-
-
+eval { str2path('(0') };
+like($@, qr/^Unsupported thing in the path, step #0: '\(0' /, "unclosed parenthesis");
 
 eval { path2str(undef) };
 like($@, qr/^Arrayref expected for path/, "undef as path");
