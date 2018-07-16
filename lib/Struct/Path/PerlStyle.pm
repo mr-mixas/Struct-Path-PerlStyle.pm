@@ -9,8 +9,9 @@ use utf8;
 use Carp 'croak';
 use Safe;
 use Text::Balanced qw(extract_bracketed extract_quotelike);
-use Text::ParseWords 'parse_line';
 use re qw(is_regexp regexp_pattern);
+
+require Struct::Path::PerlStyle::Functions;
 
 our @EXPORT_OK = qw(
     path2str
@@ -90,41 +91,6 @@ Examples:
 
 our $ALIASES;
 
-our $HOOKS = {
-    'back' => sub { # step back $count times
-        my $static = defined $_[0] ? $_[0] : 1;
-        return sub {
-            my $count = $static; # keep arg (reusable closure)
-            while ($count) {
-                croak "Can't step back (root of the structure)"
-                    unless (@{$_[0]} and @{$_[1]});
-                pop @{$_[0]};
-                pop @{$_[1]};
-                $count--;
-            }
-            return 1;
-        };
-    },
-    '=~' => sub {
-        croak "Only one arg accepted by '=~'" if (@_ != 1);
-        my $arg = shift;
-        return sub {
-            return (defined ${$_[1]->[-1]} and ${$_[1]->[-1]} =~ $arg) ? 1 : 0;
-        }
-    },
-    'defined' => sub {
-        croak "no args accepted by 'defined'" if (@_);
-        return sub { return defined (${$_[1]->[-1]}) ? 1 : 0 }
-    },
-    'eq' => sub {
-        croak "Only one arg accepted by 'eq'" if (@_ != 1);
-        my $arg = shift;
-        return sub {
-            return (defined ${$_[1]->[-1]} and ${$_[1]->[-1]} eq $arg) ? 1 : 0;
-        };
-    },
-};
-
 my %ESCP = (
     '\\' => '\\\\', # single => double
     '"'  => '\"',
@@ -141,7 +107,20 @@ my $ESCP = join('', sort keys %ESCP);
 my %INTP = map { $ESCP{$_} => $_ } keys %ESCP; # swap keys <-> values
 my $INTP = join('|', map { "\Q$_\E" } sort keys %INTP);
 
+# $_ will be substituted (if omitted) as first arg if placed on start of
+# hook expression
+my $COMPL_OPS = join('|', map { "\Q$_\E" }
+    qw(< > <= => lt gt le ge == != eq ne ~~ =~));
+
 my $HASH_KEY_CHARS = qr/[\p{Alnum}_\.\-\+]/;
+
+our $HOOK_STRICT = 1;
+
+my $SAFE = Safe->new;
+$SAFE->share_from(
+    'Struct::Path::PerlStyle::Functions',
+    \@Struct::Path::PerlStyle::Functions::EXPORT_OK
+);
 
 my $RSAFE = Safe->new;
 $RSAFE->permit_only(
@@ -160,7 +139,6 @@ Convert perl-style string to L<Struct::Path|Struct::Path> path structure
     $struct = str2path($string);
 
 =cut
-
 
 sub _push_hash {
     my ($steps, $text) = @_;
@@ -211,21 +189,32 @@ sub _push_hash {
 sub _push_hook {
     my ($steps, $text) = @_;
 
-    my ($hook, @args) = parse_line(' ', 0, $text);
-    my $neg;
-    if ($hook eq 'not' or $hook eq '!') {
-        $neg = $hook;
-        $hook = shift @args;
-    } elsif ($hook =~ /^!/) {
-        $neg = 1;
-        substr $hook, 0, 1, '';
+    # substitute default value if omitted
+    $text =~ s/^\s*/\$_ /
+        if ($text =~ /^\s*(!\s*|not\s+)*($COMPL_OPS)/);
+
+    my $hook = 'sub {' .
+        '$^W = 0; ' .
+        'local %_ = ("path", $_[0], "refs", $_[1]); ' .
+        'local $_ = (ref $_[1] eq "ARRAY" and @{$_[1]}) ? ${$_[1]->[-1]} : undef; ' .
+        $text .
+    '}';
+
+    open (local *STDERR,'>', \(my $stderr)); # catch compilation errors
+
+    unless ($hook = $SAFE->reval($hook, $HOOK_STRICT)) {
+        if ($stderr) {
+            $stderr =~ s/ at \(eval \d+\) .+//s;
+            $stderr = " ($stderr)";
+        } else {
+            $stderr = "";
+        }
+
+        (my $err = $@) =~ s/ at \(eval \d+\) .+//s;
+        croak "Failed to eval hook '$text': $err, step #" . @{$steps} . $stderr;
     }
 
-    croak "Unsupported hook '$hook', step #" . @{$steps}
-        unless (exists $HOOKS->{$hook});
-
-    $hook = $HOOKS->{$hook}->(@args); # closure with saved args
-    push @{$steps}, ($neg ? sub { not $hook->(@_) } : $hook);
+    push @{$steps}, $hook;
 }
 
 sub _push_list {
@@ -274,7 +263,7 @@ sub str2path($;$) {
         } elsif ($type eq '[') {
             _push_list(\@steps, $step);
         } elsif ($type eq '(') {
-             _push_hook(\@steps, $step);
+            _push_hook(\@steps, $step);
         } else { # <>
             if (exists $ALIASES->{$step}) {
                 substr $path, 0, 0, $ALIASES->{$step};
