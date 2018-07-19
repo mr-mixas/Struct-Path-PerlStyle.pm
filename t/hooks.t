@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 use Struct::Path::PerlStyle qw(str2path);
-use Test::More tests => 30;
+use Test::More tests => 31;
 
 use Data::Dumper;
 $Data::Dumper::Deparse = 1;
@@ -32,10 +32,11 @@ like($@, qr/^Failed to eval hook 'open FH, '>', 'filename'': 'open' trapped by o
 eval { str2path("(print 'Hi there!')")->[0]->() };
 like($@, qr/^Failed to eval hook 'print 'Hi there!'': 'print' trapped by operation mask/);
 
-is(
-    str2path('(die "aaaa")')->[0]->(),
-    undef,
-);
+eval { str2path('(die "aaaa")')->[0]->() };
+like($@, qr/^Failed to eval hook 'die "aaaa"': 'die' trapped by operation mask/);
+
+eval { str2path('(warn "aaaa")')->[0]->() };
+like($@, qr/^Failed to eval hook 'warn "aaaa"': 'warn' trapped by operation mask/);
 
 is(
     str2path('("simple value returned")')->[0]->(),
