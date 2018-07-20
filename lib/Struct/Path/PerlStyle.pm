@@ -121,7 +121,7 @@ $SAFE->share_from(
     'Struct::Path::PerlStyle::Functions',
     \@Struct::Path::PerlStyle::Functions::EXPORT_OK
 );
-$SAFE->deny('die', 'warn');
+$SAFE->deny('warn');
 
 my $RSAFE = Safe->new;
 $RSAFE->permit_only(

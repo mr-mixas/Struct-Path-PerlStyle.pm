@@ -2,6 +2,7 @@
 
 use strict;
 use warnings;
+
 use Struct::Path::PerlStyle qw(str2path);
 use Test::More tests => 31;
 
@@ -32,11 +33,11 @@ like($@, qr/^Failed to eval hook 'open FH, '>', 'filename'': 'open' trapped by o
 eval { str2path("(print 'Hi there!')")->[0]->() };
 like($@, qr/^Failed to eval hook 'print 'Hi there!'': 'print' trapped by operation mask/);
 
-eval { str2path('(die "aaaa")')->[0]->() };
-like($@, qr/^Failed to eval hook 'die "aaaa"': 'die' trapped by operation mask/);
-
 eval { str2path('(warn "aaaa")')->[0]->() };
 like($@, qr/^Failed to eval hook 'warn "aaaa"': 'warn' trapped by operation mask/);
+
+my $ret = eval { str2path('(die "aaaa"; return "wooo")')->[0]->() };
+is($ret, undef, "die()'s message ignored");
 
 is(
     str2path('("simple value returned")')->[0]->(),
