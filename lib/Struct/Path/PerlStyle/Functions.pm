@@ -33,8 +33,10 @@ Step back count times
 sub back {
     my $amount = defined $_[0] ? $_[0] : 1;
 
-    return $@ = "Unable to step back such amount of steps"
-        if ($amount > @{$_{path}});
+    if ($amount > @{$_{path}}) {
+        $@ = "Unable to step back such amount of steps";
+        return undef;
+    }
 
     splice @{$_{path}}, -$amount;
     splice @{$_{refs}}, -$amount;
