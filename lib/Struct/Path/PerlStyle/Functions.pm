@@ -28,20 +28,17 @@ Step back count times
 
     back(3); # go back 3 steps
 
+C<undef> returned when requested amount is greater than current step.
+
 =cut
 
 sub back {
-    my $amount = defined $_[0] ? $_[0] : 1;
+    my $steps = defined $_[0] ? $_[0] : 1;
 
-    if ($amount > @{$_{path}}) {
-        $@ = "Unable to step back such amount of steps";
-        return undef;
-    }
+    return undef if ($steps > @{$_{path}});
 
-    splice @{$_{path}}, -$amount;
-    splice @{$_{refs}}, -$amount;
-
-    return 1;
+    splice @{$_{path}}, -$steps;
+    splice @{$_{refs}}, -$steps;
 }
 
 =head1 AUTHOR

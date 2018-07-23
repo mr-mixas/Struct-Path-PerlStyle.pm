@@ -94,10 +94,10 @@ $args = [
     [\"a",\"b"],
 ];
 
-eval { str2path('[0](back 3)')->[1]->($args->[0], $args->[1]) };
-like(
-    $@, qr/Unable to step back such amount of steps at /,
-    "Must fail if steps amount greater than current path length"
+is(
+    str2path('[0](back 3)')->[1]->($args->[0], $args->[1]),
+    undef,
+    "back() should return undef when unable to step back"
 );
 
 ok(
