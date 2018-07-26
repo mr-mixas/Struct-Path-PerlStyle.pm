@@ -92,7 +92,7 @@ Examples:
 our $ALIASES;
 
 my %ESCP = (
-    '\\' => '\\\\', # single => double
+#    '\\' => '\\\\', # single => double
     '"'  => '\"',
     "\a" => '\a',
     "\b" => '\b',
@@ -123,15 +123,24 @@ $SAFE->share_from(
 );
 $SAFE->deny('warn');
 
-my $RSAFE = Safe->new;
-$RSAFE->permit_only(
-    'const',
-    'lineseq',
-    'qr',
-    'leaveeval',
-    'rv2gv',
-    'padany',
-);
+my $QR_MAP = {
+    ''   => sub { qr/$_[0]/ },
+    i    => sub { qr/$_[0]/i },
+    m    => sub { qr/$_[0]/m },
+    s    => sub { qr/$_[0]/s },
+    x    => sub { qr/$_[0]/x },
+    im   => sub { qr/$_[0]/im },
+    is   => sub { qr/$_[0]/is },
+    ix   => sub { qr/$_[0]/ix },
+    ms   => sub { qr/$_[0]/ms },
+    mx   => sub { qr/$_[0]/mx },
+    sx   => sub { qr/$_[0]/sx },
+    ims  => sub { qr/$_[0]/ims },
+    imx  => sub { qr/$_[0]/imx },
+    isx  => sub { qr/$_[0]/isx },
+    msx  => sub { qr/$_[0]/msx },
+    imsx => sub { qr/$_[0]/imsx },
+};
 
 =head2 str2path
 
@@ -158,11 +167,11 @@ sub _push_hash {
         } elsif (!$type and $delim eq "'") {
             push @{$step{K}}, $body;
         } elsif ($delim eq '/' and !$type or $type eq 'm') {
-            push @{$step{R}}, $RSAFE->reval("qr/$body/$mods", 1);
+            $mods = join('', sort(split('', $mods)));
+            eval { push @{$step{R}}, $QR_MAP->{$mods}->($body) };
             if ($@) {
-                (my $err = $@) =~ s/ at \(eval \d+\) .+//s;
-                croak "Step #" . scalar @{$steps} .
-                    ": failed to evaluate regexp: $err";
+                (my $err = $@) =~ s/ at .+//s;
+                croak "Step #" . scalar @{$steps} . " $err";
             }
         } else { # things like qr, qw and so on
             substr($text, 0, 0, $token);
@@ -354,7 +363,7 @@ sub path2str($) {
                         unless (is_regexp($r));
 
                     my ($patt, $mods) = regexp_pattern($r);
-                    $patt =~ s|/|\\/|g;
+                    $mods =~ s/[dlu]//g; # for Perl's internal use (c) perlre
                     push @items, "/$patt/$mods";
                 }
             }

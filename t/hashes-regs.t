@@ -3,7 +3,7 @@
 use strict;
 use warnings FATAL => 'all';
 
-use Test::More tests => 22;
+use Test::More tests => 24;
 use Struct::Path::PerlStyle qw(str2path path2str);
 
 use lib 't';
@@ -30,18 +30,21 @@ like($@, qr|^Unsupported key ',/a/', step #0 |, "Leading delimiter");
 eval { str2path('{/a/,}') };
 like($@, qr|^Trailing delimiter at step #0 |, "Trailing delimiter");
 
+eval { str2path('{/pat/u}') };
+like($@, qr|^Delimiter expected before 'u', step #0 |, "for Perl's internal use (c) perlre");
+
 SKIP: {
     skip "Old perls (or Safe.pm?) silently dies on this regexps", 3
         unless ($] >= 5.014);
 
     eval { str2path('{word}{/(?{ exit 123 })/}') };
-    like($@, qr|^Step #1: failed to evaluate regexp: 'exit' trapped |);
+    like($@, qr|^Step #1 Eval-group not allowed |);
 
     eval { str2path('{/(?{ garbage })/}') };
-    like($@, qr|^Step #0: failed to evaluate regexp: 'subroutine dereference' trapped |);
+    like($@, qr|^Step #0 Eval-group not allowed |);
 
     eval { str2path('{/(?{ `echo >&2 WHOAA` })/}') };
-    like($@, qr|^Step #0: failed to evaluate regexp: 'pushmark' trapped |);
+    like($@, qr|^Step #0 Eval-group not allowed |);
 }
 
 eval { path2str([{R => 1}]) };
@@ -81,7 +84,7 @@ roundtrip (
 );
 
 roundtrip (
-    [{R => [qr/^Regular\/\/Slashes/]}],
+    [{R => [qr|^Regular\/\/Slashes|]}],
     '{/^Regular\/\/Slashes/}',
     'Regular slashes'
 );
@@ -104,15 +107,11 @@ roundtrip (
     'Escape sequences'
 );
 
-# FIXME
-# Text::Balanced has no support for 'u' modifier ()
-# https://metacpan.org/source/SHAY/Text-Balanced-2.03/lib/Text/Balanced.pm#L633
-#roundtrip (
-#    [{R => [qr/Escape\x{263A}|\x1b|\N{U+263D}|\c[|\033Sequences2/]}],
-#    '{/Escape\x{263A}|\x1b|\N{U+263D}|\c[|\033Sequences2/' .
-#        ($] >= 5.014 ? 'u' : '') . '}',
-#    'Escape sequences2'
-#);
+roundtrip (
+    [{R => [qr/Escape\x{263A}|\x1b|\N{U+263D}|\c[|\033Sequences2/]}],
+    '{/Escape\x{263A}|\x1b|\N{U+263D}|\c[|\033Sequences2/}',
+    'Escape sequences2'
+);
 
 roundtrip (
     [{R => [qr#^([^\?]{1,5}|.+|\\?|)*$#]}],
