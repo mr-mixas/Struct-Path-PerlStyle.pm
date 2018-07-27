@@ -72,18 +72,63 @@ Nothing is exported by default.
 
 =head1 PATH SYNTAX
 
-Examples:
+Path is a sequence of 'steps', each represents nested level in the structure.
 
-    '{a}{b}'              # points to b's value
-    '{a}{}'               # all values from a's subhash; same for arrays (using empty square brackets)
-    '{a}{b,c}'            # b's and c's values
-    '{a}{"space inside"}' # key must be quoted unless it is a simple word (single quotes supported as well)
-    '{a}{"multi\nline"}'  # same for special characters (if double quoted)
-    '{a}{/pattern/mods}'  # regexp keys match (fully supported, except code expressions)
-    '{a}{b}[0,1,2,5]'     # 0, 1, 2 and 5 array's items
-    '{a}{b}[0..2,5]'      # same, but using ranges
-    '{a}{b}[9..0]'        # descending ranges allowed (perl doesn't)
-    '{a}{b}(back){c}'     # step back (to previous level)
+=head2 Hashes
+
+Like in perl hash keys should be specified using curly brackets
+
+    {}                  # all values from a's subhash
+    {foo}               # value for 'foo' key
+    {foo,bar}           # slicing: 'foo' and 'bar' values
+    {"space inside"}    # key must be quoted unless it is a simple word
+    {"multi\nline"}     # special characters interpolated when double quoted
+    {/pattern/mods}     # keys regexp match
+
+=head2 Arrays
+
+Square brackets used for array indexes specification
+
+    []                  # all array items
+    [9]                 # 9-th element
+    [0,1,2,5]           # slicing: 0, 1, 2 and 5 array items
+    [0..2,5]            # same, but using ranges
+    [9..0]              # descending ranges allowed
+
+=head2 Hooks
+
+Expressions enclosed in parenthesis treated as hooks and evaluated using
+L<Safe> compartment. Almost all perl operators and core functions available,
+see L<Safe> for more info. Some additional path related functions provided by
+L<Struct::Path::PerlStyle::Functions>.
+
+    [](/pattern/mods)           # match array values by regular expression
+    []{foo}(eq "bar" && back)   # select hashes which have pair 'foo' => 'bar'
+
+There are two global variables available whithin safe compartment: C<$_> which
+refers to value and C<%_> provides current path via key C<path> (in
+L<Struct::Path> notation) and structure levels refs stack via key C<refs>.
+
+=head2 Aliases
+
+String in angle brackets is an alias - shortcut mapped into specified sequence
+of steps. Aliases resolved recursively, so alias may also map into path with
+another aliases.
+
+Aliases map may be defined via global variable
+
+    $Struct::Path::PerlStyle::ALIASES = {
+        foo => '{some}{complex}{path}',
+        bar => '{and}{one}{more}'
+    };
+
+and then
+
+    <foo><bar>      # expands to '{some}{complex}{path}{and}{one}{more}'
+
+or as option for C<str2path>:
+
+    str2path('<foo>', {aliases => {foo => '{long}{path}'}});
 
 =head1 SUBROUTINES
 
@@ -420,11 +465,12 @@ L<http://search.cpan.org/dist/Struct-Path-PerlStyle/>
 
 =head1 SEE ALSO
 
-L<Struct::Path>, L<Struct::Diff>, L<perldsc>, L<perldata>
+L<Struct::Path>, L<Struct::Path::JsonPointer>, L<Struct::Diff>
+L<perldsc>, L<perldata>, L<Safe>
 
 =head1 LICENSE AND COPYRIGHT
 
-Copyright 2016,2017 Michael Samoglyadov.
+Copyright 2016-2018 Michael Samoglyadov.
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of either: the GNU General Public License as published
