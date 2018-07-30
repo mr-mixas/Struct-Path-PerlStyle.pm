@@ -1,5 +1,11 @@
 Revision history for Struct-Path-PerlStyle
 
+0.90    2017-07-27
+        - parser rewritten using Text::Balanced, angle brackets used for aliases
+        - hooks now is a full featured perl expressions (evaluated using Safe.pm)
+        - hash keys regexp evaluation improved
+        - documentation improved
+
 0.80    2017-12-22
         - path structs format changed, exported subs renamed to avoid ambigouseness
         - deprecated hook '<<' support removed
