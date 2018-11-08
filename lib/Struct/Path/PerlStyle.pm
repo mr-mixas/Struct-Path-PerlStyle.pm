@@ -34,11 +34,11 @@ Struct::Path::PerlStyle - Perl-style syntax frontend for L<Struct::Path|Struct::
 
 =head1 VERSION
 
-Version 0.90
+Version 0.91
 
 =cut
 
-our $VERSION = '0.90';
+our $VERSION = '0.91';
 
 =head1 SYNOPSIS
 
@@ -106,25 +106,25 @@ L<Struct::Path::PerlStyle::Functions>.
     []{foo}(eq "bar" && back)   # select hashes which have pair 'foo' => 'bar'
 
 There are two global variables available whithin safe compartment: C<$_> which
-refers to value and C<%_> provides current path via key C<path> (in
+refers to value and C<%_> which provides current path via key C<path> (in
 L<Struct::Path> notation) and structure levels refs stack via key C<refs>.
 
 =head2 Aliases
 
 String in angle brackets is an alias - shortcut mapped into specified sequence
-of steps. Aliases resolved recursively, so alias may also map into path with
+of steps. Aliases resolved iteratively, so alias may also map into path with
 another aliases.
 
 Aliases map may be defined via global variable
 
     $Struct::Path::PerlStyle::ALIASES = {
-        foo => '{some}{complex}{path}',
-        bar => '{and}{one}{more}'
+        foo => '{some}{long}{path}',
+        bar => '{and}{one}{more}{step}'
     };
 
 and then
 
-    <foo><bar>      # expands to '{some}{complex}{path}{and}{one}{more}'
+    <foo><bar>      # expands to '{some}{long}{path}{and}{one}{more}{step}'
 
 or as option for C<str2path>:
 
@@ -137,7 +137,6 @@ or as option for C<str2path>:
 our $ALIASES;
 
 my %ESCP = (
-#    '\\' => '\\\\', # single => double
     '"'  => '\"',
     "\a" => '\a',
     "\b" => '\b',
@@ -320,12 +319,10 @@ sub str2path($;$) {
         } elsif ($type eq '(') {
             _push_hook(\@steps, $step);
         } else { # <>
-            if (exists $ALIASES->{$step}) {
-                substr $path, 0, 0, $ALIASES->{$step};
-                redo;
-            }
+            croak "Unknown alias '$step'" unless (exists $ALIASES->{$step});
 
-            croak "Unknown alias '$step'";
+            substr $path, 0, 0, $ALIASES->{$step};
+            redo;
         }
     }
 
