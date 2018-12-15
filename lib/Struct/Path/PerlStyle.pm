@@ -212,7 +212,7 @@ sub _push_hash {
             push @{$step{K}}, $body;
         } elsif ($delim eq '/' and !$type or $type eq 'm') {
             $mods = join('', sort(split('', $mods)));
-            eval { push @{$step{R}}, $QR_MAP->{$mods}->($body) };
+            eval { push @{$step{K}}, $QR_MAP->{$mods}->($body) };
             if ($@) {
                 (my $err = $@) =~ s/ at .+//s;
                 croak "Step #" . scalar @{$steps} . " $err";
@@ -369,44 +369,36 @@ sub path2str($) {
 
             $out .= "[" . join(",", @{items}) . "]";
         } elsif (ref $step eq 'HASH') {
-            my $types = [ grep { exists $step->{$_} } qw(K R) ];
-            if (keys %{$step} != @{$types}) {
-                $types = { map { $_, 1 } @{$types} };
-                my @errs = grep { !exists $types->{$_} } sort keys %{$step};
-                croak "Unsupported hash definition (" .
-                    join(',', @errs) . "), step #$sc"
-            }
+            my $keys;
 
             if (exists $step->{K}) {
                 croak "Unsupported hash keys definition, step #$sc"
                     unless (ref $step->{K} eq 'ARRAY');
+                croak "Unsupported hash definition (extra keys), step #$sc"
+                    if (keys %{$step} > 1);
+                $keys = $step->{K};
+            } elsif (keys %{$step}) {
+                croak "Unsupported hash definition (unknown keys), step #$sc";
+            } else {
+                $keys = [];
+            }
 
-                for my $k (@{$step->{K}}) {
-                    croak "Unsupported hash key type 'undef', step #$sc"
-                        unless (defined $k);
-                    croak "Unsupported hash key type '@{[ref $k]}', step #$sc"
-                        if (ref $k);
+            for my $k (@{$keys}) {
+                if (is_regexp($k)) {
+                    my ($patt, $mods) = regexp_pattern($k);
+                    $mods =~ s/[dlu]//g; # for Perl's internal use (c) perlre
+                    push @items, "/$patt/$mods";
 
+                } elsif (defined $k and ref $k eq '') {
                     push @items, $k;
 
                     unless ($k =~ /^$HASH_KEY_CHARS+$/) {
                         $items[-1] =~ s/([\Q$ESCP\E])/$ESCP{$1}/gs;    # escape
                         $items[-1] = qq("$items[-1]");                 # quote
                     }
-                }
-            }
-
-            if (exists $step->{R}) {
-                croak "Unsupported hash regexps definition, step #$sc"
-                    unless (ref $step->{R} eq 'ARRAY');
-
-                for my $r (@{$step->{R}}) {
-                    croak "Regexp expected for regexps item, step #$sc"
-                        unless (is_regexp($r));
-
-                    my ($patt, $mods) = regexp_pattern($r);
-                    $mods =~ s/[dlu]//g; # for Perl's internal use (c) perlre
-                    push @items, "/$patt/$mods";
+                } else {
+                    croak "Unsupported hash key type '" .
+                        (ref($k) || 'undef') . "', step #$sc"
                 }
             }
 
