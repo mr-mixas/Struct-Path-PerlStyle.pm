@@ -99,7 +99,7 @@ Square brackets used for array indexes specification
 
 Expressions enclosed in parenthesis treated as hooks and evaluated using
 L<Safe> compartment. Almost all perl operators and core functions available,
-see L<Safe> for more info. Some additional path related functions provided by
+see L<Safe> for more info. Some path related functions provided by
 L<Struct::Path::PerlStyle::Functions>.
 
     [](/pattern/mods)           # match array values by regular expression
@@ -111,11 +111,11 @@ L<Struct::Path> notation) and structure levels refs stack via key C<refs>.
 
 =head2 Aliases
 
-String in angle brackets is an alias - shortcut mapped into specified sequence
-of steps. Aliases resolved iteratively, so alias may also map into path with
+String in angle brackets is an alias - shortcut mapped into sequence of
+steps. Aliases resolved iteratively, so alias may also refer into path with
 another aliases.
 
-Aliases map may be defined via global variable
+Aliases may be defined via global variable
 
     $Struct::Path::PerlStyle::ALIASES = {
         foo => '{some}{long}{path}',
