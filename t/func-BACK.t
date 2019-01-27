@@ -12,7 +12,7 @@ my $args = [
 ];
 
 ok(
-    str2path('[0](back)')->[1]->($args->[0], $args->[1]),
+    str2path('[0](BACK)')->[1]->($args->[0], $args->[1]),
     "Step back must return 1"
 );
 is_deeply(
@@ -26,7 +26,7 @@ $args = [
     [\"a",\"b"],
 ];
 
-my $spath = str2path('[0](back 2)');
+my $spath = str2path('[0](back 2)');  # lower-case alias testes also
 ok(
     $spath->[1]->($args->[0], $args->[1]),
     "Step back must return 1"
@@ -56,8 +56,8 @@ $args = [
 ];
 
 is(
-    str2path('[0](back 3)')->[1]->($args->[0], $args->[1]),
+    str2path('[0](BACK 3)')->[1]->($args->[0], $args->[1]),
     undef,
-    "back() should return undef when unable to step back"
+    "BACK() should return undef when unable to step back"
 );
 

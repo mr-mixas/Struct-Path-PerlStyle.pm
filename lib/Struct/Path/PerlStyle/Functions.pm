@@ -6,8 +6,12 @@ use warnings FATAL => 'all';
 use parent 'Exporter';
 
 our @EXPORT_OK = qw(
+    BACK
     back
 );
+
+# INPORTANT: upper case should be used for function names to avoid clashes
+# with existing perl functions and operators.
 
 =head1 NAME
 
@@ -22,17 +26,19 @@ Nothing is exported by default.
 
 =head1 Functions
 
-=head2 back
+=head2 BACK, back
 
 Step back count times
 
-    back(3); # go back 3 steps
+    BACK(3); # go back 3 steps
 
 C<undef> returned when requested amount is greater than current step.
+Lower-case 'back' is just an alias to 'BACK' for backward compatibility;
+deprecated and will be removed in the future.
 
 =cut
 
-sub back {
+sub BACK {
     my $steps = defined $_[0] ? $_[0] : 1;
 
     return undef if ($steps > @{$_{path}});
@@ -40,6 +46,8 @@ sub back {
     splice @{$_{path}}, -$steps;
     splice @{$_{refs}}, -$steps;
 }
+
+*back = \&BACK; # for backward compatibility, deprecated
 
 =head1 AUTHOR
 
