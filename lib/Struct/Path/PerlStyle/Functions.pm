@@ -5,6 +5,8 @@ use strict;
 use warnings FATAL => 'all';
 use parent 'Exporter';
 
+use Scalar::Util qw(looks_like_number);
+
 our @EXPORT_OK = qw(
     BACK
     back
@@ -41,6 +43,7 @@ deprecated and will be removed in the future.
 sub BACK {
     my $steps = defined $_[0] ? $_[0] : 1;
 
+    return undef unless (looks_like_number $steps and int($steps) == $steps);
     return undef if ($steps > @{$_{path}});
 
     splice @{$_{path}}, -$steps;
