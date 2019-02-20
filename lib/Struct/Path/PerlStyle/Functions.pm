@@ -44,7 +44,8 @@ sub BACK {
     my $steps = defined $_[0] ? $_[0] : 1;
 
     return undef unless (looks_like_number $steps and int($steps) == $steps);
-    return undef if ($steps > @{$_{path}});
+    return 1 if ($steps == 0);
+    return undef if ($steps < 0 or $steps > @{$_{path}});
 
     splice @{$_{path}}, -$steps;
     splice @{$_{refs}}, -$steps;

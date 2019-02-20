@@ -4,7 +4,7 @@ use strict;
 use warnings;
 
 use Struct::Path::PerlStyle qw(str2path);
-use Test::More tests => 7;
+use Test::More tests => 8;
 
 my $args = [
     [[0],[1]], # path should be passed as first arg
@@ -65,5 +65,11 @@ is(
     str2path('[0](BACK "text")')->[1]->($args->[0], $args->[1]),
     undef,
     "BACK() should return undef when not an int passed"
+);
+
+is(
+    str2path('[0](BACK 0)')->[1]->($args->[0], $args->[1]),
+    1,
+    "BACK() should do nothing when zero passed for step amount"
 );
 
