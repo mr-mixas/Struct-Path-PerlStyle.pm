@@ -8,11 +8,11 @@ Struct::Path::PerlStyle - Perl-style syntax frontend for [Struct::Path](https://
 
 # VERSION
 
-Version 0.91
+Version 0.92
 
 # SYNOPSIS
 
-    use Struct::Path qw(spath);
+    use Struct::Path qw(path);
     use Struct::Path::PerlStyle qw(path2str str2path);
 
     my $nested = {
@@ -73,7 +73,7 @@ see [Safe](https://metacpan.org/pod/Safe) for more info. Some path related funct
 [Struct::Path::PerlStyle::Functions](https://metacpan.org/pod/Struct::Path::PerlStyle::Functions).
 
     [](/pattern/mods)           # match array values by regular expression
-    []{foo}(eq "bar" && back)   # select hashes which have pair 'foo' => 'bar'
+    []{foo}(eq "bar" && BACK)   # select hashes which have pair 'foo' => 'bar'
 
 There are two global variables available whithin safe compartment: `$_` which
 refers to value and `%_` which provides current path via key `path` (in
@@ -89,12 +89,12 @@ Aliases may be defined via global variable
 
     $Struct::Path::PerlStyle::ALIASES = {
         foo => '{some}{long}{path}',
-        bar => '{and}{one}{more}{step}'
+        bar => '{and}{few}{steps}{more}'
     };
 
 and then
 
-    <foo><bar>      # expands to '{some}{long}{path}{and}{one}{more}{step}'
+    <foo><bar>      # expands to '{some}{long}{path}{and}{few}{steps}{more}'
 
 or as option for `str2path`:
 
@@ -157,7 +157,7 @@ You can also look for information at:
 
 # LICENSE AND COPYRIGHT
 
-Copyright 2016-2018 Michael Samoglyadov.
+Copyright 2016-2019 Michael Samoglyadov.
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of either: the GNU General Public License as published
