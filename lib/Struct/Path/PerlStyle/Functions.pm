@@ -99,7 +99,7 @@ L<Struct::Path>, L<Struct::Diff>, L<perldsc>, L<perldata>
 
 =head1 LICENSE AND COPYRIGHT
 
-Copyright 2018 Michael Samoglyadov.
+Copyright 2018-2019 Michael Samoglyadov.
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of either: the GNU General Public License as published
