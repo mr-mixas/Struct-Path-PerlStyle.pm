@@ -153,8 +153,23 @@ my $INTP = join('|', map { "\Q$_\E" } sort keys %INTP);
 
 # $_ will be substituted (if omitted) as first arg if placed on start of
 # hook expression
-my $COMPL_OPS = join('|', map { "\Q$_\E" }
-    qw(< > <= => lt gt le ge == != eq ne ~~ =~));
+my $COMPL_OPS = join('|', (
+    '==',
+    '!=',
+    '=~',
+    '!~',
+    'eq',
+    'ne',
+    '<',
+    '>',
+    '<=',
+    '>=',
+    'lt',
+    'gt',
+    'le',
+    'ge',
+    '~~',
+));
 
 my $HASH_KEY_CHARS = qr/[\p{Alnum}_\.\-\+]/;
 
@@ -244,8 +259,7 @@ sub _push_hook {
     my ($steps, $text) = @_;
 
     # substitute default value if omitted
-    $text =~ s/^\s*/\$_ /
-        if ($text =~ /^\s*(!\s*|not\s+)*($COMPL_OPS)/);
+    $text =~ s/^\s*($COMPL_OPS)/\$_ $1/;
 
     my $hook = 'sub {' .
         '$^W = 0; ' .
