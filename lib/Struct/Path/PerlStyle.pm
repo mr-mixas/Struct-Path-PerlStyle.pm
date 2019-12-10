@@ -213,6 +213,9 @@ sub _push_hash {
     my ($steps, $text) = @_;
     my ($body, $delim, $mods, %step, $token, $type);
 
+    # extract_quotelike fails to parse bare zero as a string
+    push @{$step{K}}, $text if $text eq '0';
+
     while ($text) {
         ($token, $text, $type, $delim, $body, $mods) =
             (extract_quotelike($text))[0,1,3,4,5,10];
